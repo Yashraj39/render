@@ -26,4 +26,9 @@ public class UserController {
         return repo.save(user);
     }
 
+    @PostMapping("/health")
+    public String health(){
+        return "OK";
+    }
+
 }
