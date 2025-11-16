@@ -26,9 +26,14 @@ public class UserController {
         return repo.save(user);
     }
 
-    @PostMapping("/health")
+    @GetMapping("/health")
     public String health(){
         return "OK";
+    }
+
+    @GetMapping("/")
+    public String home() {
+        return "App is running!";
     }
 
 }
