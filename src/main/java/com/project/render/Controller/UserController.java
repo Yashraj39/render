@@ -1,47 +1,63 @@
 package com.project.render.Controller;
 
-import com.project.render.Entity.User;
-import com.project.render.Repository.UserRepository;
+import com.project.render.Entity.Auth;
+import com.project.render.IO.ProfileRequest;
+import com.project.render.IO.ProfileResponse;
 import com.project.render.Service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@CrossOrigin(origins = "*")
 @RestController
+@RequestMapping("api/v1.0")
 public class UserController {
 
     @Autowired
-    private UserService userService;
+    private UserService profileService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user){
-        return userService.register(user);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProfileResponse register(@Valid @RequestBody ProfileRequest request) {
+        return profileService.registerUser(request);
+    }
+
+    @PostMapping("/verify-otp")
+    public String verifyOtp(@RequestBody Auth request) {
+        if(request.getEmail()==null || request.getOtp()==null){
+            throw new IllegalArgumentException("Email and Otp are required");
+        }
+        return profileService.verifyOtp(request.getEmail(), request.getOtp());
     }
 
     @PostMapping("/login")
-    public  ResponseEntity<?> login(@RequestBody User user){
-        Boolean found = userService.login(user);
-        if(found) return ResponseEntity.ok("found");
-        return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
+    public ProfileResponse login(@RequestBody Auth request) {
+        if(request.getEmail()==null || request.getPassword()==null){
+            throw new IllegalArgumentException("Email and password are required");
+        }
+        return profileService.login(request.getEmail(), request.getPassword());
     }
 
-    @GetMapping("/user")
-    public List<User> getall(){
-        return userService.getall();
+    @PostMapping("/resend-otp")
+    public String resendOtp(@RequestBody Auth request) {
+        if(request.getEmail()==null){
+            throw new IllegalArgumentException("Email is required");
+        }
+        return profileService.resendOtp(request.getEmail());
     }
 
-    @GetMapping("/health")
-    public String health(){
-        return "OK";
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestBody Auth request) {
+        return profileService.forgotPassword(request.getEmail());
     }
 
-    @GetMapping("/")
-    public String home() {
-        return "App is running!";
+    @PostMapping("/verify-reset-otp")
+    public String verifyResetOtp(@RequestBody Auth request) {
+        return profileService.verifyResetOtp(request.getEmail(),request.getOtp());
     }
 
+    @PostMapping("/new-password")
+    public String newPassword(@RequestBody Auth request) {
+        return profileService.newPassword(request.getEmail(),request.getPassword());
+    }
 }
