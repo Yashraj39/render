@@ -166,4 +166,14 @@ public class UserService {
         return "Password reset successful. You can now login.";
 
     }
+
+    public String deleteUser(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        userRepository.deleteById(user.getId());
+
+        return "User deleted successfully";
+
+    }
 }

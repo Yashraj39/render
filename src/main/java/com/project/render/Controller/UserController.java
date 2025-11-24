@@ -60,4 +60,9 @@ public class UserController {
     public String newPassword(@RequestBody Auth request) {
         return profileService.newPassword(request.getEmail(),request.getPassword());
     }
+
+    @PostMapping("/delete-user")
+    public String deleteUser(@RequestBody Auth request) {
+        return profileService.deleteUser(request.getEmail());
+    }
 }
