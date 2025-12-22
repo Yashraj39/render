@@ -41,6 +41,7 @@ public class UserService {
                 .isAccountVerified(false)
                 .verifyOtp(generatedOtp)
                 .verifiedOtpExpireAt(System.currentTimeMillis() + 5*60*1000)
+                .role("CUSTOMER")
                 .build();
 
         userRepository.save(newUser);

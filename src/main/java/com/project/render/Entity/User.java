@@ -34,6 +34,8 @@ public class User {
     private Long resetOtpExpireAt;
     private Boolean isResetOtpVerified;
 
+    private String role;
+
     @CreatedDate
     private Timestamp createdAt;
     @LastModifiedDate
