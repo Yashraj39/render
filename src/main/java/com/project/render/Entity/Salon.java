@@ -25,6 +25,8 @@ public class Salon {
     private String name;
     private String city;
     private String address;
+    private String contact;
+    private String salonEmail;
     private LocalTime opentime;
     private LocalTime closetime;
     private String imageUrl;

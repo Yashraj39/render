@@ -1,6 +1,7 @@
 package com.project.render.Controller;
 
 import com.project.render.DTO.SalonCardResponse;
+import com.project.render.DTO.SalonDetails;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.Service;
 import com.project.render.Service.SalonService;
@@ -22,20 +23,23 @@ public class SalonController {
                           @RequestParam String name,
                           @RequestParam String city,
                           @RequestParam String address,
+                          @RequestParam String conatct,
+                          @RequestParam String salonEmail,
                           @RequestParam String opentime,
                           @RequestParam String closetime,
                           @RequestParam(required = false) MultipartFile image) {
-        return salonService.addSalon(ownerId, name, city, address, opentime, closetime, image);
+        return salonService.addSalon(ownerId, name, city, address, conatct, salonEmail, opentime, closetime, image);
     }
 
     @GetMapping("/get-salon/{salonId}")
-    public Salon getSalon(@PathVariable String salonId){
-        return salonService.getSalon(salonId);
+    public SalonDetails getSalon(@PathVariable String salonId){
+        return salonService.getSalonDetails(salonId);
     }
 
     @GetMapping("/get-all-salon")
     public List<SalonCardResponse> getAll(){
         return salonService.getAllSalonWithServices();
     }
+
 
 }

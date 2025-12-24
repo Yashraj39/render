@@ -20,10 +20,12 @@ public class OwnerController {
                           @RequestParam String name,
                           @RequestParam String city,
                           @RequestParam String address,
+                          @RequestParam String contact,
+                          @RequestParam String salonEmail,
                           @RequestParam String opentime,
                           @RequestParam String closetime,
                           @RequestParam(required = false) MultipartFile image) {
-        return salonService.addSalon(ownerId, name, city, address, opentime, closetime, image);
+        return salonService.addSalon(ownerId, name, city, address, contact, salonEmail, opentime, closetime, image);
     }
 
 }

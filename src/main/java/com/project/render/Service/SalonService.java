@@ -3,6 +3,7 @@ package com.project.render.Service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.project.render.DTO.SalonCardResponse;
+import com.project.render.DTO.SalonDetails;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.SalonRepository;
@@ -34,7 +35,7 @@ public class SalonService {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    public Salon addSalon(String ownerId, String name, String city, String address,
+    public Salon addSalon(String ownerId, String name, String city, String address, String contact, String salonEmail,
                           String opentimeStr, String closetimeStr, MultipartFile image) {
 
         Optional<User> isOwner = userRepository.findByUserId(ownerId);
@@ -59,6 +60,8 @@ public class SalonService {
         salon.setName(name);
         salon.setCity(city);
         salon.setAddress(address);
+        salon.setContact(contact);
+        salon.setSalonEmail(salonEmail);
         salon.setOpentime(open);
         salon.setClosetime(close);
 
@@ -108,6 +111,32 @@ public class SalonService {
         }
 
         return response;
+
+    }
+
+    public SalonDetails getSalonDetails(String salonId){
+
+        Salon salon = salonRepository.findById(salonId).orElseThrow(()-> new RuntimeException());
+
+        List<String> serviceNames = new ArrayList<>();
+
+        if(salon.getServiceIds()!=null){
+            salon.getServiceIds().forEach(id -> {
+                serviceRepository.findById(id).ifPresent
+                        (service -> serviceNames.add(service.getName()));
+            });
+        }
+
+       return new SalonDetails(
+                salon.getId(),
+                salon.getName(),
+                salon.getAddress(),
+                salon.getCity(),
+                salon.getImageUrl(),
+                salon.getContact(),
+                salon.getSalonEmail(),
+                serviceNames
+        );
 
     }
 
