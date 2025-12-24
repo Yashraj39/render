@@ -1,5 +1,6 @@
 package com.project.render.Controller;
 
+import com.project.render.DTO.SalonCardResponse;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.Service;
 import com.project.render.Service.SalonService;
@@ -33,8 +34,8 @@ public class SalonController {
     }
 
     @GetMapping("/get-all-salon")
-    public List<Salon> getAll(){
-        return salonService.getAllSalon();
+    public List<SalonCardResponse> getAll(){
+        return salonService.getAllSalonWithServices();
     }
 
 }

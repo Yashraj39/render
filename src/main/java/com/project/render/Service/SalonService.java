@@ -2,9 +2,11 @@ package com.project.render.Service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.project.render.DTO.SalonCardResponse;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.SalonRepository;
+import com.project.render.Repository.ServiceRepository;
 import com.project.render.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +30,9 @@ public class SalonService {
 
     @Autowired
     private Cloudinary cloudinary;
+
+    @Autowired
+    private ServiceRepository serviceRepository;
 
     public Salon addSalon(String ownerId, String name, String city, String address,
                           String opentimeStr, String closetimeStr, MultipartFile image) {
@@ -70,6 +76,38 @@ public class SalonService {
         }
 
         return salonRepository.save(salon);
+
+    }
+
+    public List<SalonCardResponse> getAllSalonWithServices(){
+
+        List<Salon> salons = salonRepository.findAll();
+        List<SalonCardResponse> response = new ArrayList<>();
+
+
+        for(Salon salon : salons) {
+
+            List<String> serviceNames = new ArrayList<>();
+
+            if(salon.getServiceIds()!=null){
+                salon.getServiceIds().forEach(id -> {
+                    serviceRepository.findById(id).ifPresent
+                            (service -> serviceNames.add(service.getName()));
+                });
+            }
+
+            response.add(
+                    new SalonCardResponse(
+                            salon.getId(),
+                            salon.getName(),
+                            salon.getCity(),
+                            salon.getImageUrl(),
+                            serviceNames
+                    )
+            );
+        }
+
+        return response;
 
     }
 
