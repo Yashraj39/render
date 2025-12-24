@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.project.render.DTO.SalonCardResponse;
 import com.project.render.DTO.SalonDetails;
+import com.project.render.DTO.ServiceResponse;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.SalonRepository;
@@ -118,12 +119,20 @@ public class SalonService {
 
         Salon salon = salonRepository.findById(salonId).orElseThrow(()-> new RuntimeException());
 
-        List<String> serviceNames = new ArrayList<>();
+        List<ServiceResponse> services = new ArrayList<>();
 
         if(salon.getServiceIds()!=null){
             salon.getServiceIds().forEach(id -> {
                 serviceRepository.findById(id).ifPresent
-                        (service -> serviceNames.add(service.getName()));
+                        (service ->
+                                services.add(
+                                        new ServiceResponse(
+                                        service.getId(),
+                                        service.getName(),
+                                        service.getDescription()
+                                        )
+                                )
+                        );
             });
         }
 
@@ -135,7 +144,7 @@ public class SalonService {
                 salon.getImageUrl(),
                 salon.getContact(),
                 salon.getSalonEmail(),
-                serviceNames
+                services
         );
 
     }
