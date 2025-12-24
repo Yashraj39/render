@@ -7,6 +7,8 @@ import com.project.render.Repository.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @org.springframework.stereotype.Service
 public class ServiceCrudService {
@@ -33,5 +35,9 @@ public class ServiceCrudService {
         salonRepository.save(salon);
 
         return service;
+    }
+
+    public Optional<Service> getService(String serviceId) {
+        return serviceRepository.findById(serviceId);
     }
 }
