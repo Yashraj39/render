@@ -8,7 +8,7 @@ import com.project.render.DTO.ServiceResponse;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.SalonRepository;
-import com.project.render.Repository.ServiceRepository;
+import com.project.render.Repository.ServiceCategoryRepository;
 import com.project.render.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class SalonService {
     private Cloudinary cloudinary;
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    private ServiceCategoryRepository serviceCategoryRepository;
 
     public Salon addSalon(String ownerId, String name, String city, String address, String contact, String salonEmail,
                           String opentimeStr, String closetimeStr, MultipartFile image) {
@@ -95,7 +95,7 @@ public class SalonService {
 
             if(salon.getServiceIds()!=null){
                 salon.getServiceIds().forEach(id -> {
-                    serviceRepository.findById(id).ifPresent
+                    serviceCategoryRepository.findById(id).ifPresent
                             (service -> serviceNames.add(service.getName()));
                 });
             }
@@ -123,7 +123,7 @@ public class SalonService {
 
         if(salon.getServiceIds()!=null){
             salon.getServiceIds().forEach(id -> {
-                serviceRepository.findById(id).ifPresent
+                serviceCategoryRepository.findById(id).ifPresent
                         (service ->
                                 services.add(
                                         new ServiceResponse(

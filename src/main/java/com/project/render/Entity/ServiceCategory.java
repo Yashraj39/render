@@ -20,6 +20,6 @@ public class ServiceCategory {
     private String id;
     private String name;
     private String description;
-    private List<String> typeIds;
+    private List<String> serviceIds;
 
 }
