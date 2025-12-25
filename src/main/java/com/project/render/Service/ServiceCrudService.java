@@ -1,13 +1,12 @@
 package com.project.render.Service;
 
 import com.project.render.Entity.Salon;
-import com.project.render.Entity.Service;
+import com.project.render.Entity.ServiceCategory;
 import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @org.springframework.stereotype.Service
@@ -19,25 +18,25 @@ public class ServiceCrudService {
     @Autowired
     private SalonRepository salonRepository;
 
-    public Service addService(String salonId,com.project.render.Entity.Service service) {
+    public ServiceCategory addService(String salonId, ServiceCategory serviceCategory) {
 
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(()->new RuntimeException("Salon not found"));
 
-        Service savedService = serviceRepository.save(service);
+        ServiceCategory savedServiceCategory = serviceRepository.save(serviceCategory);
 
         if(salon.getServiceIds() == null) {
             salon.setServiceIds(new ArrayList<>());
         }
 
-        salon.getServiceIds().add(savedService.getId());
+        salon.getServiceIds().add(savedServiceCategory.getId());
 
         salonRepository.save(salon);
 
-        return service;
+        return serviceCategory;
     }
 
-    public Optional<Service> getService(String serviceId) {
+    public Optional<ServiceCategory> getService(String serviceId) {
         return serviceRepository.findById(serviceId);
     }
 }
