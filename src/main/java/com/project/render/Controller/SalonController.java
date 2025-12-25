@@ -22,12 +22,12 @@ public class SalonController {
                           @RequestParam String name,
                           @RequestParam String city,
                           @RequestParam String address,
-                          @RequestParam String conatct,
+                          @RequestParam String contact,
                           @RequestParam String salonEmail,
                           @RequestParam String opentime,
                           @RequestParam String closetime,
                           @RequestParam(required = false) MultipartFile image) {
-        return salonService.addSalon(ownerId, name, city, address, conatct, salonEmail, opentime, closetime, image);
+        return salonService.addSalon(ownerId, name, city, address, contact, salonEmail, opentime, closetime, image);
     }
 
     @GetMapping("/get-salon/{salonId}")
