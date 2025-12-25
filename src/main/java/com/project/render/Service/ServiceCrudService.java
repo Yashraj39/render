@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ServiceCrudService {
@@ -43,15 +44,23 @@ public class ServiceCrudService {
         return savedService;
     }
 
-    public void getService(String salonId,String categoryId,String genderCategory){
+    public List<com.project.render.Entity.Service> getService(String salonId, String categoryId, String genderCategory){
 
         Salon salon = salonRepository.findById(salonId).orElseThrow(()-> new RuntimeException("Salon not found"));
 
-        ServiceCategory serviceCategory = serviceCategoryRepository.findById(salonId).orElseThrow(()-> new RuntimeException());
+        if (salon.getServiceIds() == null ||
+                !salon.getServiceIds().contains(categoryId)) {
+            throw new RuntimeException("Category does not belong to this salon");
+        }
 
+        ServiceCategory serviceCategory = serviceCategoryRepository.findById(categoryId).orElseThrow(()-> new RuntimeException("Service Not Exists"));
 
+        if(genderCategory.equalsIgnoreCase("all")){
+            return serviceCrudRepository.findByCategoryId(categoryId);
+        }
+
+        return serviceCrudRepository.findByCategoryIdAndGenderCategoryIgnoreCase(categoryId,genderCategory);
 
     }
-
 
 }
