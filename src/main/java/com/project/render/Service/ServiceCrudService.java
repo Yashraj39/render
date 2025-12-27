@@ -1,5 +1,7 @@
 package com.project.render.Service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.ServiceCategory;
 import com.project.render.Repository.SalonRepository;
@@ -7,9 +9,11 @@ import com.project.render.Repository.ServiceCategoryRepository;
 import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,10 +28,25 @@ public class ServiceCrudService {
     @Autowired
     private SalonRepository salonRepository;
 
-    public com.project.render.Entity.Service addService(String serviceCategoryId,com.project.render.Entity.Service service){
+    @Autowired
+    private Cloudinary cloudinary;
+
+    public com.project.render.Entity.Service addService(String serviceCategoryId, com.project.render.Entity.Service service, MultipartFile image){
 
         ServiceCategory serviceCategory = serviceCategoryRepository
                 .findById(serviceCategoryId).orElseThrow(()-> new RuntimeException());
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(
+                        image.getBytes(),
+                        ObjectUtils.asMap("folder", "services")
+                );
+                service.setImageUrl(uploadResult.get("secure_url").toString());
+            } catch (Exception e) {
+                throw new RuntimeException("Image upload failed", e);
+            }
+        }
 
         service.setCategoryId(serviceCategoryId);
 

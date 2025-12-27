@@ -4,6 +4,7 @@ import com.project.render.Entity.Service;
 import com.project.render.Service.ServiceCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,8 +23,11 @@ public class ServiceCrudController {
         return serviceCrudService.getService(salonId, categoryId, gender);
     }
 
-    @PostMapping("/add-service/{serviceCategoryId}")
-    public Service addService(@PathVariable String serviceCategoryId, @RequestBody Service service){
-        return serviceCrudService.addService(serviceCategoryId,service);
+    @PostMapping(value = "/add-service/{serviceCategoryId}",consumes = "multipart/form-data")
+    public Service addService(@PathVariable String serviceCategoryId,
+                              @RequestPart("service") Service service,
+                              @RequestPart(value = "image",required = false)MultipartFile image){
+        return serviceCrudService.addService(serviceCategoryId,service,image);
     }
+
 }

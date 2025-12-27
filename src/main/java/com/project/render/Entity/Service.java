@@ -21,6 +21,7 @@ public class Service {
     private String description;
     private int price;
     private int time;
+    private String imageUrl;
 
     private String categoryId;
 
