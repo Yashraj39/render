@@ -25,7 +25,7 @@ public class ServiceCrudController {
 
     @PostMapping(value = "/add-service/{serviceCategoryId}",consumes = "multipart/form-data")
     public Service addService(@PathVariable String serviceCategoryId,
-                              @RequestPart("service") Service service,
+                              @ModelAttribute Service service,
                               @RequestPart(value = "image",required = false)MultipartFile image){
         return serviceCrudService.addService(serviceCategoryId,service,image);
     }
