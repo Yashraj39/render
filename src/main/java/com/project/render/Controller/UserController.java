@@ -73,8 +73,8 @@ public class UserController {
         return profileService.addProfileImage(userId,image);
     }
 
-    @GetMapping("/get-profile-image")
-    private String getProfile(@RequestBody String userId){
+    @GetMapping("/get-profile-image/{userId}")
+    private String getProfile(@PathVariable String userId){
         return profileService.getProfileImage(userId);
     }
 
