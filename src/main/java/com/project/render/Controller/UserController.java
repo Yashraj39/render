@@ -1,6 +1,7 @@
 package com.project.render.Controller;
 
 import com.project.render.Entity.Auth;
+import com.project.render.Entity.User;
 import com.project.render.IO.ProfileRequest;
 import com.project.render.IO.ProfileResponse;
 import com.project.render.Service.UserService;
@@ -70,6 +71,11 @@ public class UserController {
     @PostMapping("/add-profile-image")
     public String addProfile(@RequestParam String userId,@RequestParam MultipartFile image) {
         return profileService.addProfileImage(userId,image);
+    }
+
+    @GetMapping("/get-profile-image")
+    private String getProfile(@RequestBody String userId){
+        return profileService.getProfileImage(userId);
     }
 
 }

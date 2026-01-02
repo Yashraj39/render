@@ -206,4 +206,11 @@ public class UserService {
 
         return "Profile image added successfully";
     }
+
+    public String getProfileImage(String userId) {
+
+        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
+        return user.getProfileImageUrl();
+
+    }
 }
