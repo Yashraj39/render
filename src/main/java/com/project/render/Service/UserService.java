@@ -1,5 +1,7 @@
 package com.project.render.Service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.project.render.Entity.User;
 import com.project.render.IO.ProfileRequest;
 import com.project.render.IO.ProfileResponse;
@@ -9,8 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +31,9 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     public ProfileResponse registerUser(ProfileRequest request) {
         if(userRepository.existsByEmail(request.getEmail())) {
@@ -176,5 +184,26 @@ public class UserService {
 
         return "User deleted successfully";
 
+    }
+
+    public String addProfileImage(String userId, MultipartFile image) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        if(image!=null && !image.isEmpty()){
+
+            try{
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.asMap("folder","user/profile"));
+                String imageUrl = uploadResult.get("secure_url").toString();
+                user.setProfileImageUrl(imageUrl);
+                userRepository.save(user);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return "Profile image added successfully";
     }
 }

@@ -8,8 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-//eveything is working
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1.0")
@@ -67,4 +66,10 @@ public class UserController {
     public String deleteUser(@RequestBody Auth request) {
         return profileService.deleteUser(request.getEmail());
     }
+
+    @PostMapping("/add-profile-image")
+    public String addProfile(@RequestParam String userId,@RequestParam MultipartFile image) {
+        return profileService.addProfileImage(userId,image);
+    }
+
 }
