@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BookingCartService {
@@ -35,12 +37,26 @@ public class BookingCartService {
         com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
+        boolean categoryAlreadyExists = cart.getItems().stream()
+                .anyMatch(item ->
+                        item.getCategoryId() != null &&
+                                item.getCategoryId().equals(service.getCategoryId())
+                );
+
+
+        if (categoryAlreadyExists) {
+            throw new RuntimeException("Service from this category already added");
+        }
+
+
         CartItem item = CartItem.builder()
+                .categoryId(service.getCategoryId())
                 .serviceId(service.getId())
                 .serviceName(service.getName())
                 .price(service.getPrice())
                 .time(service.getTime())
                 .imageUrl(service.getImageUrl())
+                .active(false)
                 .build();
 
         cart.getItems().add(item);
@@ -58,8 +74,26 @@ public class BookingCartService {
     }
 
     public void clearCart(String userId, String salonId) {
-        bookingCartRepository.findByUserIdAndSalonId(userId, salonId)
-                .ifPresent(bookingCartRepository::delete);
+        Optional<BookingCart> bookingCart = bookingCartRepository.findByUserIdAndSalonId(userId, salonId);
+        if(bookingCart.isPresent()){
+            BookingCart cart = bookingCart.get();
+
+            cart.getItems().removeIf(item -> !item.isActive());
+
+            int totalPrice = 0;
+            int totalTime = 0;
+
+            for(CartItem item:cart.getItems()){
+                totalPrice += item.getPrice();
+                totalTime += item.getTime();
+            }
+
+            cart.setTotalPrice(totalPrice);
+            cart.setTotalTime(totalTime);
+
+            bookingCartRepository.save(cart);
+        }
+
     }
 
 }
