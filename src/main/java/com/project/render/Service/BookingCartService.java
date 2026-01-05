@@ -68,9 +68,28 @@ public class BookingCartService {
     }
 
     public BookingCart getCart(String userId, String salonId) {
-        return bookingCartRepository
+
+        BookingCart cart = bookingCartRepository
                 .findByUserIdAndSalonId(userId, salonId)
                 .orElseThrow(() -> new RuntimeException("Cart empty"));
+
+        List<CartItem> inactiveItems = cart.getItems().stream()
+                .filter(item -> !item.isActive())
+                .toList();
+
+        int totalPrice = 0;
+        int totalTime = 0;
+
+        for (CartItem item : inactiveItems) {
+            totalPrice += item.getPrice();
+            totalTime += item.getTime();
+        }
+
+        cart.setItems(inactiveItems);
+        cart.setTotalPrice(totalPrice);
+        cart.setTotalTime(totalTime);
+
+        return cart;
     }
 
     public void clearCart(String userId, String salonId) {
