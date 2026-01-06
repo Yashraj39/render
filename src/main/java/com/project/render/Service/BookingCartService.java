@@ -1,7 +1,9 @@
 package com.project.render.Service;
 
+import com.project.render.Entity.Barber;
 import com.project.render.Entity.BookingCart;
 import com.project.render.Entity.CartItem;
+import com.project.render.Repository.BarberRepository;
 import com.project.render.Repository.BookingCartRepository;
 import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ public class BookingCartService {
 
     @Autowired
     private ServiceCrudRepository serviceCrudRepository;
+
+    @Autowired
+    private BarberRepository barberRepository;
 
     public BookingCart addServiceToCart(String userId,String salonId,String serviceId){
 
@@ -113,6 +118,17 @@ public class BookingCartService {
             bookingCartRepository.save(cart);
         }
 
+    }
+
+    public String showAvailableTimes(String barberId,String serviceId){
+
+        com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
+                .orElseThrow(()-> new RuntimeException("Service not found"));
+
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(()-> new RuntimeException("Barber not found"));
+
+        return "times";
     }
 
 }

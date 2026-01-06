@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalTime;
+
 @Document(collection="barbers")
 @Data
 @Builder
@@ -18,4 +20,6 @@ public class Barber {
     private String salonId; // which salon they belong to
     private String name;
     private boolean isActive; // optional, for shift/on leave
+    private LocalTime workingStartTime;
+    private LocalTime workingEndTime;
 }

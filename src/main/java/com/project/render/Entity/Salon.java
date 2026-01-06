@@ -31,6 +31,7 @@ public class Salon {
     private LocalTime closetime;
     private String imageUrl;
 
+    private List<String> barbersIds;
     private List<String> serviceIds;
 
 }

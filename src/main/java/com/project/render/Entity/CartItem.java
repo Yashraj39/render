@@ -18,5 +18,6 @@ public class CartItem {
     private int time;
     private String imageUrl;
     private boolean active;
+    private String barberId;
 
 }
