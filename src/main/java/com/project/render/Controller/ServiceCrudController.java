@@ -30,4 +30,13 @@ public class ServiceCrudController {
         return serviceCrudService.addService(serviceCategoryId,service,image);
     }
 
+    @GetMapping("/get-services-for-ai")
+    public List<Service> getServicesForAI(
+            @RequestParam String salonId,
+            @RequestParam String categoryId
+    ) {
+        return serviceCrudService.getAiServices(salonId,categoryId);
+    }
+
+
 }

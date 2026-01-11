@@ -24,7 +24,7 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**")
+                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**","/api/gemini/**","/api/upload/**")
                         .permitAll().anyRequest().authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .logout(AbstractHttpConfigurer::disable);

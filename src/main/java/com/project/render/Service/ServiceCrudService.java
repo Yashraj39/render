@@ -82,4 +82,15 @@ public class ServiceCrudService {
 
     }
 
+    public List<com.project.render.Entity.Service> getAiServices(String salonId, String categoryId) {
+
+        Salon salon = salonRepository.findById(salonId).orElseThrow(()-> new RuntimeException("Salon not found"));
+
+        if (salon.getServiceIds() == null ||
+                !salon.getServiceIds().contains(categoryId)) {
+            throw new RuntimeException("Category does not belong to this salon");
+        }
+
+         return serviceCrudRepository.findByCategoryId(categoryId);
+    }
 }
