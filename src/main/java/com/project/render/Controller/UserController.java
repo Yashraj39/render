@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@CrossOrigin(origins = "https://salon-frontend-vercel-project.vercel.app")
 @RestController
 @RequestMapping("api/v1.0")
 public class UserController {
