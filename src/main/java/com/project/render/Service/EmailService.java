@@ -1,26 +1,31 @@
 package com.project.render.Service;
 
-import com.sendgrid.*;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private final String fromEmail = System.getenv("SENDGRID_MAIL");
+    private final String apiKey = System.getenv("BREVO_API_KEY");
+    private final String fromEmail = System.getenv("BREVO_MAIL");
 
     public void sendOtpEmail(String to, String otp) {
-        String apiKey = System.getenv("SENDGRID_API_KEY");
 
         if (apiKey == null || apiKey.isEmpty()) {
-            throw new RuntimeException("SendGrid API key is not set!");
+            throw new RuntimeException("Brevo API key is not set!");
         }
 
-        Email from = new Email(fromEmail);
+        String url = "https://api.brevo.com/v3/smtp/email";
 
-        String subject = "Glow & Shine Salon – Your OTP Code";
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", apiKey);
 
         String htmlContent =
                 "<div style='font-family: Arial, sans-serif; padding: 20px;'>" +
@@ -36,27 +41,33 @@ public class EmailService {
                         "<p style='font-size:11px; color:#999;'>Glow & Shine Salon, Surat, India</p>" +
                         "</div>";
 
-        Email recipient = new Email(to);
+        Map<String, Object> body = new HashMap<>();
 
-        Content content = new Content("text/html", htmlContent);
+        Map<String, String> sender = new HashMap<>();
+        sender.put("email", fromEmail);
 
-        Mail mail = new Mail(from, subject, recipient, content);
+        Map<String, String> recipient = new HashMap<>();
+        recipient.put("email", to);
 
-        SendGrid sg = new SendGrid(apiKey);
-        Request request = new Request();
+        body.put("sender", sender);
+        body.put("to", new Object[]{recipient});
+        body.put("subject", "Glow & Shine Salon – Your OTP Code");
+        body.put("htmlContent", htmlContent);
+
+        HttpEntity<Map<String, Object>> request =
+                new HttpEntity<>(body, headers);
+
         try {
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-            Response response = sg.api(request);
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(url, request, String.class);
 
-            System.out.println("SendGrid response code: " + response.getStatusCode());
-            System.out.println("SendGrid response body: " + response.getBody());
-            System.out.println("SendGrid response headers: " + response.getHeaders());
+            System.out.println("Brevo response code: " + response.getStatusCode());
+            System.out.println("Brevo response body: " + response.getBody());
 
-            if (response.getStatusCode() >= 400) {
-                System.err.println("SendGrid returned an error sending to " + to);
+            if (response.getStatusCode().value() >= 400) {
+                System.err.println("Brevo returned error while sending to " + to);
             }
+
         } catch (Exception e) {
             System.err.println("Exception while sending email to " + to);
             e.printStackTrace();
