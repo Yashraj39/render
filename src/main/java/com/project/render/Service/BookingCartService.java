@@ -9,9 +9,8 @@ import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.awt.print.Book;
+import java.util.*;
 
 @Service
 public class BookingCartService {
@@ -129,6 +128,35 @@ public class BookingCartService {
                 .orElseThrow(()-> new RuntimeException("Barber not found"));
 
         return "times";
+    }
+
+    public int getCartCount(String userId, String salonId) {
+        BookingCart cart = bookingCartRepository.findByUserIdAndSalonId(userId,salonId).orElse(null);
+        if(cart==null) return 0;
+        return (int) cart.getItems().stream().filter(item -> !item.isActive()).count();
+    }
+
+    public List<Map<String, Object>> getUserPendingCarts(String userId) {
+
+        List<BookingCart> carts = bookingCartRepository.findByUserId(userId);
+
+        return carts.stream()
+                .filter(cart -> cart.getItems() != null)
+                .map(cart -> {
+                    long count = cart.getItems().stream()
+                            .filter(item -> !item.isActive())
+                            .count();
+
+                    if (count == 0) return null;
+
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("salonId", cart.getSalonId());
+                    map.put("pendingCount", count);
+
+                    return map;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
 }

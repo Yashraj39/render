@@ -6,6 +6,9 @@ import com.project.render.Service.BookingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
@@ -35,5 +38,19 @@ public class CartController {
     ) {
         bookingCartService.clearCart(userId, salonId);
     }
+
+    @GetMapping("/cart-count")
+    public int getCartCount(
+            @RequestParam String userId,
+            @RequestParam String salonId
+    ){
+        return bookingCartService.getCartCount(userId,salonId);
+    }
+
+    @GetMapping("/navbar-cart")
+    public List<Map<String, Object>> getNavbarCart(@RequestParam String userId) {
+        return bookingCartService.getUserPendingCarts(userId);
+    }
+
 
 }
