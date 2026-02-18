@@ -213,4 +213,9 @@ public class UserService {
         return user.getProfileImageUrl();
 
     }
+
+    public String getUserByUserID(String userId){
+        Optional<User> user = userRepository.findByUserId(userId);
+        return user.get().getName();
+    }
 }

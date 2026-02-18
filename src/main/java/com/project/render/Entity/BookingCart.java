@@ -20,6 +20,7 @@ public class BookingCart {
     private String id;
 
     private String userId;
+    private String customerName;
     private String salonId;
 
     private List<CartItem> items;

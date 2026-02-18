@@ -10,6 +10,8 @@ public interface BookingCartRepository extends MongoRepository<BookingCart,Strin
 
     Optional<BookingCart> findByUserIdAndSalonId(String userId, String salonId);
 
+    Optional<BookingCart> findByUserIdAndSalonIdAndCustomerName(String userId, String salonId, String customerName);
+
     List<BookingCart> findByUserId(String userId);
 
 }

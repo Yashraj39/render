@@ -9,7 +9,6 @@ import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Book;
 import java.util.*;
 
 @Service
@@ -24,13 +23,15 @@ public class BookingCartService {
     @Autowired
     private BarberRepository barberRepository;
 
-    public BookingCart addServiceToCart(String userId,String salonId,String serviceId){
+    // Add service to cart (supports multiple customer names)
+    public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String customerName) {
 
         BookingCart cart = bookingCartRepository
-                .findByUserIdAndSalonId(userId,salonId)
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
                 .orElse(
                         BookingCart.builder()
                                 .userId(userId)
+                                .customerName(customerName)
                                 .salonId(salonId)
                                 .items(new ArrayList<>())
                                 .totalPrice(0)
@@ -47,11 +48,9 @@ public class BookingCartService {
                                 item.getCategoryId().equals(service.getCategoryId())
                 );
 
-
         if (categoryAlreadyExists) {
             throw new RuntimeException("Service from this category already added");
         }
-
 
         CartItem item = CartItem.builder()
                 .categoryId(service.getCategoryId())
@@ -64,30 +63,25 @@ public class BookingCartService {
                 .build();
 
         cart.getItems().add(item);
-
         cart.setTotalPrice(cart.getTotalPrice() + service.getPrice());
         cart.setTotalTime(cart.getTotalTime() + service.getTime());
 
         return bookingCartRepository.save(cart);
     }
 
-    public BookingCart getCart(String userId, String salonId) {
+    // Get cart (specific customer)
+    public BookingCart getCart(String userId, String salonId, String customerName) {
 
         BookingCart cart = bookingCartRepository
-                .findByUserIdAndSalonId(userId, salonId)
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
                 .orElseThrow(() -> new RuntimeException("Cart empty"));
 
         List<CartItem> inactiveItems = cart.getItems().stream()
                 .filter(item -> !item.isActive())
                 .toList();
 
-        int totalPrice = 0;
-        int totalTime = 0;
-
-        for (CartItem item : inactiveItems) {
-            totalPrice += item.getPrice();
-            totalTime += item.getTime();
-        }
+        int totalPrice = inactiveItems.stream().mapToInt(CartItem::getPrice).sum();
+        int totalTime = inactiveItems.stream().mapToInt(CartItem::getTime).sum();
 
         cart.setItems(inactiveItems);
         cart.setTotalPrice(totalPrice);
@@ -96,46 +90,46 @@ public class BookingCartService {
         return cart;
     }
 
-    public void clearCart(String userId, String salonId) {
-        Optional<BookingCart> bookingCart = bookingCartRepository.findByUserIdAndSalonId(userId, salonId);
-        if(bookingCart.isPresent()){
-            BookingCart cart = bookingCart.get();
+    // Clear cart (specific customer)
+    public void clearCart(String userId, String salonId, String customerName) {
+        Optional<BookingCart> bookingCart = bookingCartRepository
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName);
 
+        bookingCart.ifPresent(cart -> {
             cart.getItems().removeIf(item -> !item.isActive());
 
-            int totalPrice = 0;
-            int totalTime = 0;
-
-            for(CartItem item:cart.getItems()){
-                totalPrice += item.getPrice();
-                totalTime += item.getTime();
-            }
+            int totalPrice = cart.getItems().stream().mapToInt(CartItem::getPrice).sum();
+            int totalTime = cart.getItems().stream().mapToInt(CartItem::getTime).sum();
 
             cart.setTotalPrice(totalPrice);
             cart.setTotalTime(totalTime);
 
             bookingCartRepository.save(cart);
-        }
-
+        });
     }
 
-    public String showAvailableTimes(String barberId,String serviceId){
-
+    // Show available times (unchanged)
+    public String showAvailableTimes(String barberId, String serviceId) {
         com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
-                .orElseThrow(()-> new RuntimeException("Service not found"));
-
+                .orElseThrow(() -> new RuntimeException("Service not found"));
         Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(()-> new RuntimeException("Barber not found"));
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
 
         return "times";
     }
 
-    public int getCartCount(String userId, String salonId) {
-        BookingCart cart = bookingCartRepository.findByUserIdAndSalonId(userId,salonId).orElse(null);
-        if(cart==null) return 0;
+    // Get cart count (specific customer)
+    public int getCartCount(String userId, String salonId, String customerName) {
+        BookingCart cart = bookingCartRepository
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
+                .orElse(null);
+
+        if (cart == null) return 0;
+
         return (int) cart.getItems().stream().filter(item -> !item.isActive()).count();
     }
 
+    // Get all pending carts for user (all customerNames)
     public List<Map<String, Object>> getUserPendingCarts(String userId) {
 
         List<BookingCart> carts = bookingCartRepository.findByUserId(userId);
@@ -146,11 +140,11 @@ public class BookingCartService {
                     long count = cart.getItems().stream()
                             .filter(item -> !item.isActive())
                             .count();
-
                     if (count == 0) return null;
 
                     Map<String, Object> map = new HashMap<>();
                     map.put("salonId", cart.getSalonId());
+                    map.put("customerName", cart.getCustomerName());
                     map.put("pendingCount", count);
 
                     return map;
@@ -158,5 +152,4 @@ public class BookingCartService {
                 .filter(Objects::nonNull)
                 .toList();
     }
-
 }
