@@ -24,13 +24,14 @@ public class BookingCartService {
     private BarberRepository barberRepository;
 
     // Add service to cart (supports multiple customer names)
-    public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String customerName) {
+    public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String bookedBy, String customerName) {
 
         BookingCart cart = bookingCartRepository
                 .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
                 .orElse(
                         BookingCart.builder()
                                 .userId(userId)
+                                .bookedBy(bookedBy)
                                 .customerName(customerName)
                                 .salonId(salonId)
                                 .items(new ArrayList<>())

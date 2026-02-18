@@ -30,7 +30,7 @@ public class CartController {
             customerName = userService.getUserByUserID(userId);
         }
 
-        return bookingCartService.addServiceToCart(userId, salonId, serviceId, customerName);
+        return bookingCartService.addServiceToCart(userId, salonId, serviceId, userService.getUserByUserID(userId),customerName);
     }
 
     // Get cart
