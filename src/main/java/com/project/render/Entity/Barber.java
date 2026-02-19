@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Document(collection="barbers")
 @Data
@@ -22,4 +24,8 @@ public class Barber {
     private boolean isActive; // optional, for shift/on leave
     private LocalTime workingStartTime;
     private LocalTime workingEndTime;
+    private LocalTime lunchStart;    // 12:00
+    private LocalTime lunchEnd;      // 13:00
+
+    private List<LocalDate> leaves;
 }

@@ -5,6 +5,7 @@ import com.project.render.Entity.BookingCart;
 import com.project.render.Entity.CartItem;
 import com.project.render.Repository.BarberRepository;
 import com.project.render.Repository.BookingCartRepository;
+import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class BookingCartService {
 
     @Autowired
     private BarberRepository barberRepository;
+
+    @Autowired
+    private SalonRepository salonRepository;
 
     // Add service to cart (supports multiple customer names)
     public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String bookedBy, String customerName) {
@@ -147,6 +151,11 @@ public class BookingCartService {
                     map.put("salonId", cart.getSalonId());
                     map.put("customerName", cart.getCustomerName());
                     map.put("pendingCount", count);
+
+                    salonRepository.findById(cart.getSalonId()).
+                            ifPresent(salon ->
+                                    map.put("salonName",salon.getName())
+                            );
 
                     return map;
                 })
