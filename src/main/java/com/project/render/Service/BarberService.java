@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class BarberService {
@@ -18,26 +19,31 @@ public class BarberService {
     @Autowired
     private SalonRepository salonRepository;
 
-    public String addBarber(String salonId,Barber barber){
+    public String addBarber(String salonId, Barber barber){
 
         Salon salon = salonRepository.findById(salonId)
-                .orElseThrow(()->new RuntimeException("Salon not found"));
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
 
         barber.setSalonId(salonId);
         barber.setActive(true);
-        barberRepository.save(barber);
+
+        Barber savedBarber = barberRepository.save(barber);
 
         if(salon.getBarbersIds() == null){
             salon.setBarbersIds(new ArrayList<>());
         }
 
-        if (!salon.getBarbersIds().contains(barber.getId())) {
-            salon.getBarbersIds().add(barber.getId());
+        if (!salon.getBarbersIds().contains(savedBarber.getId())) {
+            salon.getBarbersIds().add(savedBarber.getId());
         }
 
         salonRepository.save(salon);
 
-        return "Barber Added";
-
+        return "Barber Added Successfully";
     }
+
+    public List<Barber> getBarbersBySalon(String salonId) {
+        return barberRepository.findBySalonIdAndActiveTrue(salonId);
+    }
+
 }

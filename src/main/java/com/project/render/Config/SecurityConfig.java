@@ -26,7 +26,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**","/api/gemini/**","/api/upload/**")
+                        .requestMatchers(HttpMethod.POST, "/api/booking/confirm").permitAll()
+                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**","/api/gemini/**","/api/upload/**","/api/barber/**", "/api/booking/**","/api/booking/available-slots")
                         .permitAll().anyRequest().authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .logout(AbstractHttpConfigurer::disable);
@@ -48,7 +49,7 @@ public class SecurityConfig {
         config.addAllowedOriginPattern("*");
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**",config);

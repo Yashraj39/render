@@ -21,7 +21,7 @@ public class Barber {
     private String id;
     private String salonId; // which salon they belong to
     private String name;
-    private boolean isActive; // optional, for shift/on leave
+    private boolean active; // optional, for shift/on leave
     private LocalTime workingStartTime;
     private LocalTime workingEndTime;
     private LocalTime lunchStart;    // 12:00

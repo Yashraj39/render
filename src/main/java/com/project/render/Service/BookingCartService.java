@@ -30,13 +30,14 @@ public class BookingCartService {
     // Add service to cart (supports multiple customer names)
     public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String bookedBy, String customerName) {
 
+        String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
-                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
                 .orElse(
                         BookingCart.builder()
                                 .userId(userId)
                                 .bookedBy(bookedBy)
-                                .customerName(customerName)
+                                .customerName(normalizedCustomerName)
                                 .salonId(salonId)
                                 .items(new ArrayList<>())
                                 .totalPrice(0)
@@ -77,8 +78,9 @@ public class BookingCartService {
     // Get cart (specific customer)
     public BookingCart getCart(String userId, String salonId, String customerName) {
 
+        String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
-                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
                 .orElseThrow(() -> new RuntimeException("Cart empty"));
 
         List<CartItem> inactiveItems = cart.getItems().stream()
@@ -97,8 +99,9 @@ public class BookingCartService {
 
     // Clear cart (specific customer)
     public void clearCart(String userId, String salonId, String customerName) {
+        String normalizedCustomerName = customerName.toLowerCase().trim();
         Optional<BookingCart> bookingCart = bookingCartRepository
-                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName);
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName);
 
         bookingCart.ifPresent(cart -> {
             cart.getItems().removeIf(item -> !item.isActive());
@@ -125,8 +128,9 @@ public class BookingCartService {
 
     // Get cart count (specific customer)
     public int getCartCount(String userId, String salonId, String customerName) {
+        String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
-                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
+                .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
                 .orElse(null);
 
         if (cart == null) return 0;
