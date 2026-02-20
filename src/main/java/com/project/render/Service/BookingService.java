@@ -15,7 +15,8 @@
     import java.time.LocalTime;
     import java.util.ArrayList;
     import java.util.List;
-    
+    import java.util.Map;
+
     @Service
     public class BookingService {
     
@@ -27,6 +28,9 @@
     
         @Autowired
         private BarberRepository barberRepository;
+
+        @Autowired
+        private BookingCartService bookingCartService;
     
         // 1️⃣ Get Available Slots
         public List<AvailableSlotResponse> getAvailableSlots(
@@ -36,23 +40,14 @@
                 String customerName,
                 LocalDate date
         ) {
-    
+
             BookingCart cart = getCart(userId, salonId, customerName);
-            Barber barber = getBarber(barberId);
-    
-            validateBarberAvailability(barber, date);
-    
-            int requiredMinutes = cart.getTotalTime();
-    
-            List<Booking> existingBookings =
-                    bookingRepository.findByBarberIdAndBookingDate(barberId, date);
-    
-            System.out.println("Required Minutes: " + requiredMinutes);
-            System.out.println("Start Time: " + barber.getWorkingStartTime());
-            System.out.println("End Time: " + barber.getWorkingEndTime());
-    
-    
-            return generateAvailableSlots(barber, existingBookings, requiredMinutes);
+
+            return bookingCartService.showAvailableTimes(
+                    barberId,
+                    cart.getTotalTime(),
+                    date
+            );
         }
     
         // 2️⃣ Confirm Booking
@@ -80,7 +75,7 @@
     
             bookingRepository.save(booking);
 
-            markCartItemsAsBooked(cart);
+            bookingCartRepository.delete(cart);
     
             return booking;
         }
@@ -120,36 +115,6 @@
             cart.getItems().forEach(item -> item.setActive(true));
     
             bookingCartRepository.save(cart);
-        }
-    
-        private List<AvailableSlotResponse> generateAvailableSlots(
-                Barber barber,
-                List<Booking> existingBookings,
-                int requiredMinutes
-        ) {
-    
-            List<AvailableSlotResponse> availableSlots = new ArrayList<>();
-    
-            LocalTime current = barber.getWorkingStartTime();
-    
-            while (current.plusMinutes(requiredMinutes)
-                    .isBefore(barber.getWorkingEndTime().plusSeconds(1))) {
-    
-                LocalTime end = current.plusMinutes(requiredMinutes);
-    
-                if (isLunchTime(barber, current, end)) {
-                    current = barber.getLunchEnd();
-                    continue;
-                }
-    
-                if (!isOverlapping(existingBookings, current, end)) {
-                    availableSlots.add(new AvailableSlotResponse(current, end));
-                }
-    
-                current = current.plusMinutes(15); // 15 min step
-            }
-    
-            return availableSlots;
         }
     
         private boolean isLunchTime(Barber barber, LocalTime start, LocalTime end) {
