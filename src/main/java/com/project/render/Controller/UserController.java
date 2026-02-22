@@ -79,4 +79,9 @@ public class UserController {
         return profileService.getProfileImage(userId);
     }
 
+    @GetMapping("/get-user")
+    public User getUser(@RequestParam String userId) {
+        return profileService.findByUserId(userId);
+    }
+
 }

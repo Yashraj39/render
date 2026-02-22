@@ -24,7 +24,7 @@ public class User {
     @Indexed(unique = true)
     private String userId;
     private String name;
-    private String ProfileImageUrl;
+    private String profileImageUrl;
     @Indexed(unique = true)
     private String email;
     private String password;

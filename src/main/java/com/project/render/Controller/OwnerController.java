@@ -1,6 +1,11 @@
 package com.project.render.Controller;
 
+import com.project.render.DTO.OwnerApplyRequest;
+import com.project.render.Entity.OwnerApplication;
 import com.project.render.Entity.Salon;
+import com.project.render.Entity.User;
+import com.project.render.Repository.UserRepository;
+import com.project.render.Service.OwnerApplicationService;
 import com.project.render.Service.SalonService;
 import jakarta.mail.Multipart;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +20,12 @@ public class OwnerController {
     @Autowired
     private SalonService salonService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OwnerApplicationService ownerApplicationService;
+
     @PostMapping("/add-salon")
     public Salon addSalon(@RequestParam String ownerId,
                           @RequestParam String name,
@@ -25,7 +36,23 @@ public class OwnerController {
                           @RequestParam String opentime,
                           @RequestParam String closetime,
                           @RequestParam(required = false) MultipartFile image) {
+        User user = userRepository.findByUserId(ownerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!"OWNER".equals(user.getRole()))
+            throw new RuntimeException("Owner not approved");
+
         return salonService.addSalon(ownerId, name, city, address, contact, salonEmail, opentime, closetime, image);
+    }
+
+    @PostMapping("/apply")
+    public OwnerApplication apply(@RequestBody OwnerApplyRequest req) {
+        return ownerApplicationService.submit(req);
+    }
+
+    @GetMapping("/application")
+    public OwnerApplication application(@RequestParam String userId) {
+        return ownerApplicationService.latest(userId);
     }
 
 }

@@ -188,7 +188,7 @@ public class UserService {
 
     public String addProfileImage(String userId, MultipartFile image) {
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "User not found"));
 
@@ -218,4 +218,10 @@ public class UserService {
         Optional<User> user = userRepository.findByUserId(userId);
         return user.get().getName();
     }
+
+    public User findByUserId(String userId) {
+        return userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
