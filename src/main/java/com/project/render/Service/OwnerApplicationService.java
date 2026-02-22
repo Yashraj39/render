@@ -27,7 +27,7 @@ public class OwnerApplicationService {
         if(req.getTermsAccepted() == null || !req.getTermsAccepted())
             throw new RuntimeException("Terms not accepted");
 
-        User user = userRepository.findById(req.getUserId())
+        User user = userRepository.findByUserId(req.getUserId())
                 .orElseThrow(()-> new RuntimeException("User not found"));
 
         if("OWNER".equalsIgnoreCase(user.getRole()))
@@ -84,7 +84,7 @@ public class OwnerApplicationService {
 
         OwnerApplication saved = ownerApplicationRepository.save(app);
 
-        User user = userRepository.findById(app.getUserId())
+        User user = userRepository.findByUserId(app.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setRole("OWNER");
