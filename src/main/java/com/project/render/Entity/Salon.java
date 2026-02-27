@@ -20,16 +20,28 @@ public class Salon {
 
     @Id
     private String id;
-    @Indexed(unique = true)
+
+    @Indexed
     private String salonOwnerId;
+
     private String name;
     private String city;
     private String address;
     private String contact;
     private String salonEmail;
+
     private LocalTime opentime;
     private LocalTime closetime;
+
+    private String mapLink;
+
     private String imageUrl;
+    private String interiorImageUrl;
+    private String exteriorImageUrl;
+    private String ownerPhotoUrl;
+
+    private DocumentType documentType;
+    private String documentUrl;
 
     private List<String> barbersIds;
     private List<String> serviceIds;

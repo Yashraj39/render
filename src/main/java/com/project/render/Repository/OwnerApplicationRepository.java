@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface OwnerApplicationRepository extends MongoRepository<OwnerApplication, String> {
     Optional<OwnerApplication> findTopByUserIdOrderByCreatedAtDesc(String userId);
     List<OwnerApplication> findByStatus(String status);
+    long deleteByUserId(String userId);
 }

@@ -5,6 +5,7 @@ import com.project.render.DTO.OwnerApplyRequest;
 import com.project.render.Entity.OwnerApplication;
 import com.project.render.Entity.User;
 import com.project.render.Repository.OwnerApplicationRepository;
+import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class OwnerApplicationService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SalonRepository salonRepository;
 
     public OwnerApplication submit(OwnerApplyRequest req){
 
@@ -123,4 +127,17 @@ public class OwnerApplicationService {
         return saved;
     }
 
+    public String removeOwner(String userId) {
+
+        User user = userRepository.findByUserId(userId).orElseThrow(()-> new RuntimeException("User not found"));
+
+        user.setRole("CUSTOMER");
+
+        long deleted = ownerApplicationRepository.deleteByUserId(userId);
+        if(deleted==0) throw new RuntimeException("Application not found");
+
+        long deletedSalon = salonRepository.deleteBySalonOwnerId(userId);
+
+        return deleted + " record deleted";
+    }
 }

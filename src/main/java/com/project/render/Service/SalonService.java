@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.project.render.DTO.SalonCardResponse;
 import com.project.render.DTO.SalonDetails;
 import com.project.render.DTO.ServiceResponse;
+import com.project.render.Entity.DocumentType;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.SalonRepository;
@@ -36,27 +37,69 @@ public class SalonService {
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
 
-    public Salon addSalon(String ownerId, String name, String city, String address, String contact, String salonEmail,
-                          String opentimeStr, String closetimeStr, MultipartFile image) {
+    private String upload(MultipartFile file, String folder) {
+        if (file == null || file.isEmpty()) return null;
 
-        Optional<User> isOwner = userRepository.findByUserId(ownerId);
-        if(isOwner.isEmpty()){
+        try {
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("folder", folder, "resource_type", "auto")
+            );
+            return uploadResult.get("secure_url").toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Cloudinary upload failed", e);
+        }
+    }
+
+    public Salon addSalon(
+            String ownerId,
+            String name,
+            String city,
+            String address,
+            String contact,
+            String salonEmail,
+            String opentimeStr,
+            String closetimeStr,
+            String mapLink,
+
+            MultipartFile cover,
+            MultipartFile interior,
+            MultipartFile exterior,
+            MultipartFile ownerPhoto,
+
+            DocumentType documentType,
+            MultipartFile document
+    ) {
+
+        Optional<User> ownerOpt = userRepository.findByUserId(ownerId);
+
+        if (ownerOpt.isEmpty())
             throw new IllegalArgumentException("Owner not found");
-        }
 
-        User owner = isOwner.get();
+        User owner = ownerOpt.get();
 
-        if (!"OWNER".equalsIgnoreCase(owner.getRole())) {
-            throw new IllegalArgumentException("User is not an owner");
-        }
+        if (!"OWNER".equalsIgnoreCase(owner.getRole()))
+            throw new IllegalArgumentException("User is not owner");
 
         LocalTime open = LocalTime.parse(opentimeStr);
         LocalTime close = LocalTime.parse(closetimeStr);
-        if (open.isAfter(close)) {
-            throw new IllegalArgumentException("Invalid open and close times");
-        }
+
+        if (open.isAfter(close) || open.equals(close))
+            throw new IllegalArgumentException("Invalid salon timing");
+
+        String base = "salons/" + ownerId;
+
+        String coverUrl = upload(cover, base + "/cover");
+        String interiorUrl = upload(interior, base + "/interior");
+        String exteriorUrl = upload(exterior, base + "/exterior");
+        String ownerUrl = upload(ownerPhoto, base + "/owner");
+        String docUrl = upload(document, base + "/document");
+
+        if (docUrl != null && documentType == null)
+            throw new IllegalArgumentException("Document type required");
 
         Salon salon = new Salon();
+
         salon.setSalonOwnerId(ownerId);
         salon.setName(name);
         salon.setCity(city);
@@ -65,22 +108,17 @@ public class SalonService {
         salon.setSalonEmail(salonEmail);
         salon.setOpentime(open);
         salon.setClosetime(close);
+        salon.setMapLink(mapLink);
 
-        if (image != null && !image.isEmpty()) {
+        salon.setImageUrl(coverUrl);
+        salon.setInteriorImageUrl(interiorUrl);
+        salon.setExteriorImageUrl(exteriorUrl);
+        salon.setOwnerPhotoUrl(ownerUrl);
 
-            try {
-                Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
-                        ObjectUtils.asMap("folder", "salons"));
-                String imageUrl = uploadResult.get("secure_url").toString();
-                salon.setImageUrl(imageUrl);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to upload image to Cloudinary", e);
-            }
-
-        }
+        salon.setDocumentType(documentType);
+        salon.setDocumentUrl(docUrl);
 
         return salonRepository.save(salon);
-
     }
 
     public List<SalonCardResponse> getAllSalonWithServices(){

@@ -1,6 +1,7 @@
 package com.project.render.Controller;
 
 import com.project.render.DTO.OwnerApplyRequest;
+import com.project.render.Entity.DocumentType;
 import com.project.render.Entity.OwnerApplication;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
@@ -27,22 +28,31 @@ public class OwnerController {
     private OwnerApplicationService ownerApplicationService;
 
     @PostMapping("/add-salon")
-    public Salon addSalon(@RequestParam String ownerId,
-                          @RequestParam String name,
-                          @RequestParam String city,
-                          @RequestParam String address,
-                          @RequestParam String contact,
-                          @RequestParam String salonEmail,
-                          @RequestParam String opentime,
-                          @RequestParam String closetime,
-                          @RequestParam(required = false) MultipartFile image) {
-        User user = userRepository.findByUserId(ownerId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public Salon addSalon(
+            @RequestParam String ownerId,
+            @RequestParam String name,
+            @RequestParam String city,
+            @RequestParam String address,
+            @RequestParam String contact,
+            @RequestParam String salonEmail,
+            @RequestParam String opentime,
+            @RequestParam String closetime,
+            @RequestParam(required = false) String mapLink,
 
-        if (!"OWNER".equals(user.getRole()))
-            throw new RuntimeException("Owner not approved");
+            @RequestParam(required = false) MultipartFile cover,
+            @RequestParam(required = false) MultipartFile interior,
+            @RequestParam(required = false) MultipartFile exterior,
+            @RequestParam(required = false) MultipartFile ownerPhoto,
 
-        return salonService.addSalon(ownerId, name, city, address, contact, salonEmail, opentime, closetime, image);
+            @RequestParam(required = false) DocumentType documentType,
+            @RequestParam(required = false) MultipartFile document
+    ) {
+        return salonService.addSalon(
+                ownerId, name, city, address, contact, salonEmail,
+                opentime, closetime, mapLink,
+                cover, interior, exterior, ownerPhoto,
+                documentType, document
+        );
     }
 
     @PostMapping("/apply")
@@ -54,5 +64,8 @@ public class OwnerController {
     public OwnerApplication application(@RequestParam String userId) {
         return ownerApplicationService.latest(userId);
     }
+
+    @DeleteMapping("/remove-owner")
+    public String removeOwner(@RequestParam String userId) { return ownerApplicationService.removeOwner(userId); }
 
 }
