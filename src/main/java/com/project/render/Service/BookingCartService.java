@@ -166,8 +166,8 @@ public class BookingCartService {
                 LocalDateTime bookingStart = bookingDate.atTime(b.getStartTime());
                 LocalDateTime bookingEnd = bookingDate.atTime(b.getEndTime());
 
-                return !(bookingEnd.isBefore(slotStartTime) ||
-                        bookingStart.isAfter(slotEndTime));
+                return bookingStart.isBefore(slotEndTime) &&
+                        bookingEnd.isAfter(slotStartTime);
             });
 
             boolean inLunch = !(slotEnd.isBefore(lunchStart) || slotStart.isAfter(lunchEnd));
