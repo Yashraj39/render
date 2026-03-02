@@ -2,6 +2,7 @@ package com.project.render.Controller;
 
 import com.project.render.DTO.AdminDecisionRequest;
 import com.project.render.Entity.OwnerApplication;
+import com.project.render.Entity.Salon;
 import com.project.render.Service.OwnerApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,4 +30,14 @@ public class AdminController {
     public OwnerApplication reject(@PathVariable String id, @RequestBody AdminDecisionRequest req) {
         return ownerApplicationService.reject(id, req);
     }
+
+    @PatchMapping("/admin/verify-salon/{salonId}")
+    public Salon verifySalon(
+            @PathVariable String salonId,
+            @RequestParam String adminId,
+            @RequestParam(required = false) String note
+    ) {
+        return ownerApplicationService.verifySalon(salonId, adminId, note);
+    }
+
 }

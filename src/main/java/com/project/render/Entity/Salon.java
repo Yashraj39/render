@@ -46,4 +46,8 @@ public class Salon {
     private List<String> barbersIds;
     private List<String> serviceIds;
 
+    private boolean isVerified = false;   // default false
+    private String verifiedByAdminId;
+    private String adminNote;
+
 }

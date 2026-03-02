@@ -3,6 +3,7 @@ package com.project.render.Service;
 import com.project.render.DTO.AdminDecisionRequest;
 import com.project.render.DTO.OwnerApplyRequest;
 import com.project.render.Entity.OwnerApplication;
+import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.OwnerApplicationRepository;
 import com.project.render.Repository.SalonRepository;
@@ -138,6 +139,26 @@ public class OwnerApplicationService {
 
         long deletedSalon = salonRepository.deleteBySalonOwnerId(userId);
 
+        userRepository.save(user);
         return deleted + " record deleted";
     }
+
+    public Salon verifySalon(String salonId, String adminId, String note) {
+
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        User admin = userRepository.findByUserId(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!"ADMIN".equalsIgnoreCase(admin.getRole()))
+            throw new RuntimeException("User is not admin");
+
+        salon.setVerified(true);
+        salon.setVerifiedByAdminId(adminId);
+        salon.setAdminNote(note);
+
+        return salonRepository.save(salon);
+    }
+
 }

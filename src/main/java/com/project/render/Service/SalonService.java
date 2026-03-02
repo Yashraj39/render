@@ -123,7 +123,7 @@ public class SalonService {
 
     public List<SalonCardResponse> getAllSalonWithServices(){
 
-        List<Salon> salons = salonRepository.findAll();
+        List<Salon> salons = salonRepository.findByIsVerifiedTrue();
         List<SalonCardResponse> response = new ArrayList<>();
 
 
