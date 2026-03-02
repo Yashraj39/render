@@ -31,7 +31,7 @@ public class AdminController {
         return ownerApplicationService.reject(id, req);
     }
 
-    @PatchMapping("/admin/verify-salon/{salonId}")
+    @PatchMapping("/verify-salon/{salonId}")
     public Salon verifySalon(
             @PathVariable String salonId,
             @RequestParam String adminId,
