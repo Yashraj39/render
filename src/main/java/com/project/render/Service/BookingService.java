@@ -5,9 +5,11 @@
     import com.project.render.Entity.Barber;
     import com.project.render.Entity.Booking;
     import com.project.render.Entity.BookingCart;
+    import com.project.render.Entity.Salon;
     import com.project.render.Repository.BarberRepository;
     import com.project.render.Repository.BookingCartRepository;
     import com.project.render.Repository.BookingRepository;
+    import com.project.render.Repository.SalonRepository;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
     
@@ -31,6 +33,12 @@
 
         @Autowired
         private BookingCartService bookingCartService;
+
+        @Autowired
+        private BookingAvailabilityValidator bookingAvailabilityValidator;
+
+        @Autowired
+        private SalonRepository salonRepository;
     
         // 1️⃣ Get Available Slots
         public List<AvailableSlotResponse> getAvailableSlots(
@@ -58,6 +66,26 @@
                     request.getSalonId(),
                     request.getCustomerName()
             );
+
+            Barber barber = barberRepository.findById(request.getBarberId())
+                    .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+            Salon salon = salonRepository.findById(request.getSalonId())
+                    .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+            bookingAvailabilityValidator.validateDayAvailability(barber, salon, request.getBookingDate());
+            bookingAvailabilityValidator.validateTimeWithinShift(barber, request.getStartTime(), request.getEndTime());
+
+            List<Booking> bookings = bookingRepository.findByBarberIdAndBookingDateAndStatus(
+                    request.getBarberId(), request.getBookingDate(), "CONFIRMED"
+            );
+
+            boolean overlaps = bookings.stream().anyMatch(b ->
+                    request.getStartTime().isBefore(b.getEndTime()) &&
+                            request.getEndTime().isAfter(b.getStartTime())
+            );
+
+            if (overlaps) throw new RuntimeException("Slot already booked");
     
             Booking booking = Booking.builder()
                     .userId(request.getUserId())

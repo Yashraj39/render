@@ -1,10 +1,7 @@
 package com.project.render.Service;
 
 import com.project.render.DTO.AvailableSlotResponse;
-import com.project.render.Entity.Barber;
-import com.project.render.Entity.Booking;
-import com.project.render.Entity.BookingCart;
-import com.project.render.Entity.CartItem;
+import com.project.render.Entity.*;
 import com.project.render.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,9 @@ public class BookingCartService {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private BookingAvailabilityValidator bookingAvailabilityValidator;
 
     // Add service to cart
     public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String bookedBy, String customerName) {
@@ -131,6 +131,11 @@ public class BookingCartService {
 
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        Salon salon = salonRepository.findById(barber.getSalonId())
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        bookingAvailabilityValidator.validateDayAvailability(barber, salon, bookingDate);
 
         LocalTime workStart = barber.getWorkingStartTime();
         LocalTime workEnd = barber.getWorkingEndTime();

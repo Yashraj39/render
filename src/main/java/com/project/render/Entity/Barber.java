@@ -7,9 +7,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Document(collection="barbers")
 @Data
@@ -28,4 +30,5 @@ public class Barber {
     private LocalTime lunchEnd;      // 13:00
 
     private List<LocalDate> leaves;
+    private Set<DayOfWeek> weeklyOffDays;
 }

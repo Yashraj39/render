@@ -8,8 +8,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Document(collection = "salons")
 @Data
@@ -49,5 +51,6 @@ public class Salon {
     private boolean isVerified = false;   // default false
     private String verifiedByAdminId;
     private String adminNote;
+    private Set<DayOfWeek> weeklyOffDays;
 
 }
