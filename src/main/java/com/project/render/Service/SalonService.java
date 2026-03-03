@@ -195,4 +195,7 @@ public class SalonService {
         return salonRepository.findById(salonId).orElseThrow(()-> new RuntimeException("Salon not found"));
     }
 
+    public List<Salon> getSalonByOwnrId(String ownerId) {
+        return salonRepository.findBySalonOwnerId(ownerId);
+    }
 }
