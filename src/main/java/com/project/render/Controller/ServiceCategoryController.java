@@ -31,4 +31,21 @@ public class ServiceCategoryController {
         return serviceCategoryService.getService(serviceId);
     }
 
+    @PatchMapping("/update-service-category/{categoryId}")
+    public ServiceCategory updateCategory(
+            @PathVariable String categoryId,
+            @RequestBody com.project.render.DTO.ServiceCategoryUpdateRequest request
+    ) {
+        return serviceCategoryService.updateCategory(categoryId, request);
+    }
+
+    @DeleteMapping("/delete-service-category/{salonId}/{categoryId}")
+    public String deleteCategory(
+            @PathVariable String salonId,
+            @PathVariable String categoryId
+    ) {
+        serviceCategoryService.deleteCategory(salonId, categoryId);
+        return "Category Deleted";
+    }
+
 }

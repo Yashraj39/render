@@ -2,6 +2,7 @@ package com.project.render.Service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.project.render.DTO.ServiceUpdateRequest;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.ServiceCategory;
 import com.project.render.Repository.SalonRepository;
@@ -92,5 +93,54 @@ public class ServiceCrudService {
         }
 
          return serviceCrudRepository.findByCategoryId(categoryId);
+    }
+
+    public com.project.render.Entity.Service updateService(
+            String serviceId,
+            ServiceUpdateRequest request,
+            MultipartFile image
+    ) {
+        com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+
+        if (request.getName() != null) service.setName(request.getName());
+        if (request.getGenderCategory() != null) service.setGenderCategory(request.getGenderCategory());
+        if (request.getDescription() != null) service.setDescription(request.getDescription());
+        if (request.getPrice() != null) service.setPrice(request.getPrice());
+        if (request.getTime() != null) service.setTime(request.getTime());
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(
+                        image.getBytes(),
+                        ObjectUtils.asMap("folder", "services")
+                );
+                service.setImageUrl(uploadResult.get("secure_url").toString());
+            } catch (Exception e) {
+                throw new RuntimeException("Image upload failed", e);
+            }
+        }
+
+        return serviceCrudRepository.save(service);
+    }
+
+    public void deleteService(String categoryId, String serviceId) {
+
+        ServiceCategory category = serviceCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+
+        if (!categoryId.equals(service.getCategoryId())) {
+            throw new RuntimeException("Service does not belong to this category");
+        }
+
+        if (category.getServiceIds() != null) {
+            category.getServiceIds().remove(serviceId);
+            serviceCategoryRepository.save(category);
+        }
+
+        serviceCrudRepository.deleteById(serviceId);
     }
 }

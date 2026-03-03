@@ -1,10 +1,12 @@
 package com.project.render.Service;
 
 import com.project.render.DTO.ServiceCategoryDropdownDTO;
+import com.project.render.DTO.ServiceCategoryUpdateRequest;
 import com.project.render.Entity.Salon;
 import com.project.render.Entity.ServiceCategory;
 import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.ServiceCategoryRepository;
+import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -19,6 +21,9 @@ public class ServiceCategoryService {
 
     @Autowired
     private SalonRepository salonRepository;
+
+    @Autowired
+    private ServiceCrudRepository serviceCrudRepository;
 
     public ServiceCategory addService(String salonId, ServiceCategory serviceCategory) {
 
@@ -35,7 +40,7 @@ public class ServiceCategoryService {
 
         salonRepository.save(salon);
 
-        return serviceCategory;
+        return savedServiceCategory;
     }
 
     public Optional<ServiceCategory> getService(String serviceId) {
@@ -61,5 +66,38 @@ public class ServiceCategoryService {
         }
 
         return response;
+    }
+
+    public ServiceCategory updateCategory(String categoryId, ServiceCategoryUpdateRequest request) {
+
+        ServiceCategory category = serviceCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if (request.getName() != null) category.setName(request.getName());
+        if (request.getDescription() != null) category.setDescription(request.getDescription());
+
+        return serviceCategoryRepository.save(category);
+    }
+
+    public void deleteCategory(String salonId, String categoryId) {
+
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (salon.getServiceIds() == null || !salon.getServiceIds().contains(categoryId)) {
+            throw new RuntimeException("Category does not belong to this salon");
+        }
+
+        ServiceCategory category = serviceCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if (category.getServiceIds() != null && !category.getServiceIds().isEmpty()) {
+            serviceCrudRepository.deleteAllById(category.getServiceIds());
+        }
+
+        salon.getServiceIds().remove(categoryId);
+        salonRepository.save(salon);
+
+        serviceCategoryRepository.deleteById(categoryId);
     }
 }

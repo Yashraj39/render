@@ -38,5 +38,23 @@ public class ServiceCrudController {
         return serviceCrudService.getAiServices(salonId,categoryId);
     }
 
+    @PatchMapping(value = "/update-service/{serviceId}", consumes = "multipart/form-data")
+    public Service updateService(
+            @PathVariable String serviceId,
+            @ModelAttribute com.project.render.DTO.ServiceUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return serviceCrudService.updateService(serviceId, request, image);
+    }
+
+    @DeleteMapping("/delete-service/{categoryId}/{serviceId}")
+    public String deleteService(
+            @PathVariable String categoryId,
+            @PathVariable String serviceId
+    ) {
+        serviceCrudService.deleteService(categoryId, serviceId);
+        return "Service Deleted";
+    }
+
 
 }

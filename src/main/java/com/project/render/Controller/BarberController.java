@@ -1,6 +1,7 @@
 package com.project.render.Controller;
 
 import com.project.render.DTO.BarberLeaveRequest;
+import com.project.render.DTO.BarberUpdateRequest;
 import com.project.render.DTO.BarberWeeklyOffRequest;
 import com.project.render.Entity.Barber;
 import com.project.render.Service.BarberService;
@@ -21,7 +22,7 @@ public class BarberController {
     private SalonService salonService;
 
     @PostMapping("/add/{salonId}")
-    public String addBarber(
+    public Barber addBarber(
             @PathVariable String salonId,
             @RequestBody Barber barber) {
 
@@ -41,6 +42,14 @@ public class BarberController {
     @PatchMapping("/{barberId}/weekly-off")
     public Barber updateWeeklyOff(@PathVariable String barberId, @RequestBody BarberWeeklyOffRequest request) {
         return barberService.updateWeeklyOff(barberId, request.getWeeklyOffDays());
+    }
+
+    @PatchMapping("/{barberId}")
+    public Barber updateBarber(
+            @PathVariable String barberId,
+            @RequestBody BarberUpdateRequest request
+    ) {
+        return barberService.updateBarber(barberId, request);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.project.render.Service;
 
+import com.project.render.DTO.BarberUpdateRequest;
 import com.project.render.Entity.Barber;
 import com.project.render.Entity.Salon;
 import com.project.render.Repository.BarberRepository;
@@ -22,7 +23,7 @@ public class BarberService {
     @Autowired
     private SalonRepository salonRepository;
 
-    public String addBarber(String salonId, Barber barber){
+    public Barber addBarber(String salonId, Barber barber){
 
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(() -> new RuntimeException("Salon not found"));
@@ -42,11 +43,11 @@ public class BarberService {
 
         salonRepository.save(salon);
 
-        return "Barber Added Successfully";
+        return savedBarber;
     }
 
     public List<Barber> getBarbersBySalon(String salonId) {
-        return barberRepository.findBySalonIdAndActiveTrue(salonId);
+        return barberRepository.findBySalonId(salonId);
     }
 
     public Barber updateLeaves(String barberId, List<LocalDate> leaves) {
@@ -65,4 +66,39 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
+    public Barber updateBarber(String barberId, BarberUpdateRequest request){
+
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        if(request.getActive() != null){
+            barber.setActive(request.getActive());
+        }
+
+        if(request.getWorkingStartTime() != null){
+            barber.setWorkingStartTime(request.getWorkingStartTime());
+        }
+
+        if(request.getWorkingEndTime() != null){
+            barber.setWorkingEndTime(request.getWorkingEndTime());
+        }
+
+        if(request.getLunchStart() != null){
+            barber.setLunchStart(request.getLunchStart());
+        }
+
+        if(request.getLunchEnd() != null){
+            barber.setLunchEnd(request.getLunchEnd());
+        }
+
+        if(request.getLeaves() != null){
+            barber.setLeaves(request.getLeaves());
+        }
+
+        if(request.getWeeklyOffDays() != null){
+            barber.setWeeklyOffDays(request.getWeeklyOffDays());
+        }
+
+        return barberRepository.save(barber);
+    }
 }
