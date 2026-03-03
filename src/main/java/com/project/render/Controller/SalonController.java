@@ -57,7 +57,7 @@ public class SalonController {
     }
 
     @GetMapping("get-salon-by-owner/{ownerId}")
-    public List<Salon> getSalonByUserId(@PathVariable String ownerId) {
+    public List<Salon> getSalonByOwnerId(@PathVariable String ownerId) {
         return salonService.getSalonByOwnrId(ownerId);
     }
 
