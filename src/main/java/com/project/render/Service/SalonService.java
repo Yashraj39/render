@@ -187,6 +187,75 @@ public class SalonService {
 
     }
 
+    public Salon updateSalonPartial(
+            String salonId,
+            String ownerId,
+
+            String name,
+            String city,
+            String address,
+            String contact,
+            String salonEmail,
+            String opentimeStr,
+            String closetimeStr,
+            String mapLink,
+
+            MultipartFile cover
+    ) {
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (!salon.getSalonOwnerId().equals(ownerId))
+            throw new IllegalArgumentException("You are not allowed to update this salon");
+
+        if (name != null) salon.setName(name);
+        if (city != null) salon.setCity(city);
+        if (address != null) salon.setAddress(address);
+        if (contact != null) salon.setContact(contact);
+        if (salonEmail != null) salon.setSalonEmail(salonEmail);
+        if (mapLink != null) salon.setMapLink(mapLink);
+
+        if (opentimeStr != null || closetimeStr != null) {
+            LocalTime open = (opentimeStr != null) ? LocalTime.parse(opentimeStr) : salon.getOpentime();
+            LocalTime close = (closetimeStr != null) ? LocalTime.parse(closetimeStr) : salon.getClosetime();
+
+            if (open.isAfter(close) || open.equals(close))
+                throw new IllegalArgumentException("Invalid salon timing");
+
+            salon.setOpentime(open);
+            salon.setClosetime(close);
+        }
+
+        if (cover != null && !cover.isEmpty()) {
+            String base = "salons/" + ownerId;
+            String coverUrl = upload(cover, base + "/cover");
+            salon.setImageUrl(coverUrl);
+        }
+
+        return salonRepository.save(salon);
+    }
+
+    public void deleteSalon(String salonId, String ownerId) {
+
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (!salon.getSalonOwnerId().equals(ownerId))
+            throw new IllegalArgumentException("You are not allowed to delete this salon");
+
+        Optional<User> ownerOpt = userRepository.findByUserId(ownerId);
+
+        if (ownerOpt.isEmpty())
+            throw new IllegalArgumentException("Owner not found");
+
+        User owner = ownerOpt.get();
+
+        if (!"OWNER".equalsIgnoreCase(owner.getRole()))
+            throw new IllegalArgumentException("User is not owner");
+
+        salonRepository.deleteById(salonId);
+    }
+
     public List<Salon> getAllSalon(){
         return salonRepository.findAll();
     }

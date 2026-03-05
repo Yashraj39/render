@@ -61,4 +61,38 @@ public class SalonController {
         return salonService.getSalonByOwnrId(ownerId);
     }
 
+    @PatchMapping("/update-salon/{salonId}")
+    public Salon updateSalon(
+            @PathVariable String salonId,
+
+            @RequestParam String ownerId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String contact,
+            @RequestParam(required = false) String salonEmail,
+            @RequestParam(required = false) String opentime,
+            @RequestParam(required = false) String closetime,
+            @RequestParam(required = false) String mapLink,
+
+            @RequestParam(required = false) MultipartFile cover
+    ) {
+        return salonService.updateSalonPartial(
+                salonId,
+                ownerId,
+                name, city, address, contact, salonEmail,
+                opentime, closetime, mapLink,
+                cover
+        );
+    }
+
+    @DeleteMapping("/delete-salon/{salonId}")
+    public String deleteSalon(
+            @PathVariable String salonId,
+            @RequestParam String ownerId
+    ) {
+        salonService.deleteSalon(salonId, ownerId);
+        return "Salon deleted successfully";
+    }
+
 }
