@@ -1,17 +1,12 @@
 package com.project.render.DTO;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ConfirmBookingRequest {
-
+public class VerifyAndConfirmRequest {
     private String userId;
     private String salonId;
     private String barberId;
@@ -21,5 +16,7 @@ public class ConfirmBookingRequest {
     private LocalTime startTime;
     private LocalTime endTime;
 
+    private String razorpayOrderId;
+    private String razorpayPaymentId;
+    private String razorpaySignature;
 }
-

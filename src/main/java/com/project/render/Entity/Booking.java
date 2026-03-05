@@ -38,6 +38,11 @@ public class Booking {
     private int totalTime;
 
     private String status; // CONFIRMED / CANCELLED
+
+    private String paymentStatus; // PENDING / PAID / FAILED
+    private String razorpayOrderId;
+    private String razorpayPaymentId;
+    private String razorpaySignature;
 }
 
 
