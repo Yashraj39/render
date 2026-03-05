@@ -32,10 +32,17 @@ public class ServiceCrudService {
     @Autowired
     private Cloudinary cloudinary;
 
-    public com.project.render.Entity.Service addService(String serviceCategoryId, com.project.render.Entity.Service service, MultipartFile image){
+    public com.project.render.Entity.Service addService(String salonId, String categoryId, com.project.render.Entity.Service service, MultipartFile image){
 
-        ServiceCategory serviceCategory = serviceCategoryRepository
-                .findById(serviceCategoryId).orElseThrow(()-> new RuntimeException());
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (salon.getServiceIds() == null || !salon.getServiceIds().contains(categoryId)) {
+            throw new RuntimeException("Category not selected for this salon");
+        }
+
+        serviceCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
 
         if (image != null && !image.isEmpty()) {
             try {
@@ -49,19 +56,10 @@ public class ServiceCrudService {
             }
         }
 
-        service.setCategoryId(serviceCategoryId);
+        service.setCategoryId(categoryId);
+        service.setSalonId(salonId);
 
-        com.project.render.Entity.Service savedService = serviceCrudRepository.save(service);
-
-        if (serviceCategory.getServiceIds() == null) {
-            serviceCategory.setServiceIds(new ArrayList<>());
-        }
-
-        serviceCategory.getServiceIds().add(savedService.getId());
-
-        serviceCategoryRepository.save(serviceCategory);
-
-        return savedService;
+        return serviceCrudRepository.save(service);
     }
 
     public List<com.project.render.Entity.Service> getService(String salonId, String categoryId, String genderCategory){
@@ -76,10 +74,10 @@ public class ServiceCrudService {
         ServiceCategory serviceCategory = serviceCategoryRepository.findById(categoryId).orElseThrow(()-> new RuntimeException("Service Not Exists"));
 
         if(genderCategory.equalsIgnoreCase("all")){
-            return serviceCrudRepository.findByCategoryId(categoryId);
+            return serviceCrudRepository.findBySalonIdAndCategoryId(salonId,categoryId);
         }
 
-        return serviceCrudRepository.findByCategoryIdAndGenderCategoryIgnoreCase(categoryId,genderCategory);
+        return serviceCrudRepository.findBySalonIdAndCategoryIdAndGenderCategoryIgnoreCase(salonId, categoryId, genderCategory);
 
     }
 
@@ -134,11 +132,6 @@ public class ServiceCrudService {
 
         if (!categoryId.equals(service.getCategoryId())) {
             throw new RuntimeException("Service does not belong to this category");
-        }
-
-        if (category.getServiceIds() != null) {
-            category.getServiceIds().remove(serviceId);
-            serviceCategoryRepository.save(category);
         }
 
         serviceCrudRepository.deleteById(serviceId);

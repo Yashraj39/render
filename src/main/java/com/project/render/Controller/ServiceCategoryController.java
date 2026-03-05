@@ -16,9 +16,18 @@ public class ServiceCategoryController {
     @Autowired
     private ServiceCategoryService serviceCategoryService;
 
-    @PostMapping("/add-service-category/{salonId}")
-    public ServiceCategory addService(@PathVariable String salonId, @RequestBody ServiceCategory serviceCategory) {
-        return serviceCategoryService.addService(salonId, serviceCategory);
+    @PostMapping("/add-service-category/{salonId}/{categoryId}")
+    public String attachCategoryToSalon(
+            @PathVariable String salonId,
+            @PathVariable String categoryId
+    ) {
+        serviceCategoryService.addCategoryToSalon(salonId, categoryId);
+        return "Category attached to salon";
+    }
+
+    @GetMapping("/get-all-master-categories")
+    public List<ServiceCategoryDropdownDTO> getAllMasterCategories() {
+        return serviceCategoryService.getAllMasterCategories();
     }
 
     @GetMapping("/get-service-categories/{salonId}")
@@ -47,5 +56,6 @@ public class ServiceCategoryController {
         serviceCategoryService.deleteCategory(salonId, categoryId);
         return "Category Deleted";
     }
+
 
 }

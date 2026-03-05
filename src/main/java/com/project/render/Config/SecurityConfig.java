@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/booking/confirm").permitAll()
-                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**","/api/gemini/**","/api/upload/**","/api/barber/**", "/api/booking/**","/api/booking/available-slots","/api/owner/**","/api/admin/owner/**")
+                        .requestMatchers("/api/v1.0/**","/health","/api/salon/**","/api/service/**","/api/cart/**","/api/service-category/**","/api/gemini/**","/api/upload/**","/api/barber/**", "/api/booking/**","/api/booking/available-slots","/api/owner/**","/api/admin/owner/**","/api/admin/service-category/**")
                         .permitAll().anyRequest().authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .logout(AbstractHttpConfigurer::disable);

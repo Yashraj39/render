@@ -25,23 +25,22 @@ public class ServiceCategoryService {
     @Autowired
     private ServiceCrudRepository serviceCrudRepository;
 
-    public ServiceCategory addService(String salonId, ServiceCategory serviceCategory) {
+    public void addCategoryToSalon(String salonId, String categoryId) {
 
         Salon salon = salonRepository.findById(salonId)
-                .orElseThrow(()->new RuntimeException("Salon not found"));
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
 
-        ServiceCategory savedServiceCategory = serviceCategoryRepository.save(serviceCategory);
+        ServiceCategory category = serviceCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        if(salon.getServiceIds() == null) {
-            salon.setServiceIds(new ArrayList<>());
+        if (salon.getServiceIds() == null) salon.setServiceIds(new ArrayList<>());
+
+        if (!salon.getServiceIds().contains(categoryId)) {
+            salon.getServiceIds().add(categoryId);
+            salonRepository.save(salon);
         }
-
-        salon.getServiceIds().add(savedServiceCategory.getId());
-
-        salonRepository.save(salon);
-
-        return savedServiceCategory;
     }
+
 
     public Optional<ServiceCategory> getService(String serviceId) {
         return serviceCategoryRepository.findById(serviceId);
@@ -68,6 +67,15 @@ public class ServiceCategoryService {
         return response;
     }
 
+    public List<ServiceCategoryDropdownDTO> getAllMasterCategories() {
+        List<ServiceCategory> list = serviceCategoryRepository.findAll();
+        List<ServiceCategoryDropdownDTO> res = new ArrayList<>();
+        for (ServiceCategory c : list) {
+            res.add(new ServiceCategoryDropdownDTO(c.getId(), c.getName()));
+        }
+        return res;
+    }
+
     public ServiceCategory updateCategory(String categoryId, ServiceCategoryUpdateRequest request) {
 
         ServiceCategory category = serviceCategoryRepository.findById(categoryId)
@@ -88,16 +96,13 @@ public class ServiceCategoryService {
             throw new RuntimeException("Category does not belong to this salon");
         }
 
-        ServiceCategory category = serviceCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        if (category.getServiceIds() != null && !category.getServiceIds().isEmpty()) {
-            serviceCrudRepository.deleteAllById(category.getServiceIds());
-        }
-
+        // ✅ Detach from THIS salon only
         salon.getServiceIds().remove(categoryId);
         salonRepository.save(salon);
 
-        serviceCategoryRepository.deleteById(categoryId);
+        // ✅ Delete only THIS salon's services under that category (optional but recommended)
+        serviceCrudRepository.deleteBySalonIdAndCategoryId(salonId, categoryId);
+
+        // ❌ DO NOT delete the category document
     }
 }

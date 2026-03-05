@@ -25,4 +25,6 @@ public class Service {
 
     private String categoryId;
 
+    private String salonId;
+
 }

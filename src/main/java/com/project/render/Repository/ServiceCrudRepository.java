@@ -11,4 +11,14 @@ public interface ServiceCrudRepository extends MongoRepository<Service,String> {
 
     List<Service> findByCategoryIdAndGenderCategoryIgnoreCase(String categoryId,String genderCategory);
 
+    List<Service> findBySalonIdAndCategoryId(String salonId, String categoryId);
+
+    List<Service> findBySalonIdAndCategoryIdAndGenderCategoryIgnoreCase(
+            String salonId, String categoryId, String genderCategory
+    );
+
+    void deleteBySalonIdAndCategoryId(String salonId, String categoryId);
+
+
+
 }
