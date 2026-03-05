@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -146,14 +147,15 @@ public class BookingCartService {
                 .findByBarberIdAndBookingDateAndStatus(barberId, bookingDate, "CONFIRMED");
 
         List<AvailableSlotResponse> slots = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
+
+        ZoneId ZONE = ZoneId.of("Asia/Kolkata");
+        LocalDateTime now = LocalDateTime.now(ZONE);
 
         LocalDateTime currentSlotStart = bookingDate.atTime(workStart);
 
+// ✅ If booking date is today, start slots from "next 15-min boundary" in IST
         if (bookingDate.equals(now.toLocalDate()) && now.toLocalTime().isAfter(workStart)) {
-            int minute = now.getMinute();
-            int rounded = ((minute + 14) / 15) * 15;
-            currentSlotStart = now.withSecond(0).withNano(0).withMinute(0).plusMinutes(rounded);
+            currentSlotStart = roundUpToNext15(now);
         }
 
         while (!currentSlotStart.plusMinutes(requiredMinutes)
@@ -175,8 +177,13 @@ public class BookingCartService {
                         bookingEnd.isAfter(slotStartTime);
             });
 
-            boolean inLunch = !(slotEnd.isBefore(lunchStart) || slotStart.isAfter(lunchEnd));
-            boolean inPast = currentSlotEnd.isBefore(now);
+            boolean inLunch = false;
+            if (lunchStart != null && lunchEnd != null) {
+                inLunch = slotStart.isBefore(lunchEnd) && slotEnd.isAfter(lunchStart);
+            }
+
+// ✅ Past slot check should be based on slot START time
+            boolean inPast = bookingDate.equals(now.toLocalDate()) && currentSlotStart.isBefore(now);
 
             if (!overlaps && !inLunch && !inPast) {
                 slots.add(new AvailableSlotResponse(slotStart, slotEnd));
@@ -186,6 +193,17 @@ public class BookingCartService {
         }
 
         return slots;
+    }
+
+    private LocalDateTime roundUpToNext15(LocalDateTime dt) {
+        int minute = dt.getMinute();
+        int mod = minute % 15;
+
+        LocalDateTime base = dt.withSecond(0).withNano(0);
+
+        if (mod == 0) return base;
+
+        return base.plusMinutes(15 - mod);
     }
 
     // Get cart count (specific customer)
