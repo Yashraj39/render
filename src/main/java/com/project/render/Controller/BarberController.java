@@ -52,4 +52,11 @@ public class BarberController {
         return barberService.updateBarber(barberId, request);
     }
 
+    @DeleteMapping("/{barberId}")
+    public String deleteBarber(
+            @PathVariable String barberId
+    ){
+        return barberService.deleteBarber(barberId);
+    }
+
 }

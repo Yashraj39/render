@@ -101,4 +101,21 @@ public class BarberService {
 
         return barberRepository.save(barber);
     }
+
+    public String deleteBarber(String barberId) {
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        Salon salon = salonRepository.findById(barber.getSalonId())
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (salon.getBarbersIds() != null) {
+            salon.getBarbersIds().remove(barberId);
+            salonRepository.save(salon);
+        }
+
+        barberRepository.delete(barber);
+
+        return "barber deleted successfully";
+    }
 }
