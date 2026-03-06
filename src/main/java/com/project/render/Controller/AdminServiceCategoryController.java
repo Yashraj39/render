@@ -38,4 +38,5 @@ public class AdminServiceCategoryController {
         serviceCategoryRepository.deleteById(categoryId);
         return "Master category deleted";
     }
+
 }
