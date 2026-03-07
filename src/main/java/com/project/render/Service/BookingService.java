@@ -102,12 +102,15 @@
             );
 
             if (overlaps) throw new RuntimeException("Slot already booked");
+
+            String normalizedCustomerName =
+                    request.getCustomerName() == null ? "" : request.getCustomerName().trim().toLowerCase();
     
             Booking booking = Booking.builder()
                     .userId(request.getUserId())
                     .salonId(request.getSalonId())
                     .barberId(request.getBarberId())
-                    .customerName(request.getCustomerName())
+                    .customerName(normalizedCustomerName)
                     .bookingDate(request.getBookingDate())
                     .startTime(request.getStartTime())
                     .endTime(request.getEndTime())
@@ -128,16 +131,20 @@
         // ===============================
         // 🔹 Private Helper Methods
         // ===============================
-    
+
         private BookingCart getCart(String userId, String salonId, String customerName) {
+
+            String normalizedCustomerName =
+                    customerName == null ? "" : customerName.trim().toLowerCase();
 
             System.out.println("Searching Cart For:");
             System.out.println("UserId: " + userId);
             System.out.println("SalonId: " + salonId);
-            System.out.println("CustomerName: '" + customerName + "'");
+            System.out.println("CustomerName raw: '" + customerName + "'");
+            System.out.println("CustomerName normalized: '" + normalizedCustomerName + "'");
 
             return bookingCartRepository
-                    .findByUserIdAndSalonIdAndCustomerName(userId, salonId, customerName)
+                    .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
                     .orElseThrow(() -> new RuntimeException("Cart not found"));
         }
 
