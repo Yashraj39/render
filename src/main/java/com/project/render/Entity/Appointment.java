@@ -1,14 +1,12 @@
 package com.project.render.Entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Document(collection = "appointments")
 @Data
@@ -16,19 +14,29 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Appointment {
+
     @Id
     private String id;
 
+    private String ownerId;
     private String salonId;
-    private String barberId;
-    private String userId;
+    private String salonName;
+    private String city;
+
+    private List<String> barberName;
+
+    private String customerName;
+    private String customerEmail;
 
     private String serviceName;
-    private String serviceType;
-    private int price;
+    private Double price;
 
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
-    private boolean isCompleted;
+    private LocalDate appointmentDate;
+    private LocalTime appointmentTime;
+
+    private String status;
+    private String paymentStatus;
+
+    private String notes;
+    private String billPdfUrl;
 }
