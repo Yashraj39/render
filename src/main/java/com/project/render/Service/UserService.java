@@ -209,7 +209,7 @@ public class UserService {
 
     public String getProfileImage(String userId) {
 
-        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
+        User user = userRepository.findByUserId(userId).orElseThrow(()-> new RuntimeException("User not found"));
         return user.getProfileImageUrl();
 
     }
