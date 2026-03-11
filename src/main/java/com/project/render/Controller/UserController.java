@@ -1,5 +1,8 @@
 package com.project.render.Controller;
 
+import com.project.render.DTO.ChangePasswordRequest;
+import com.project.render.DTO.DeleteAccountRequest;
+import com.project.render.DTO.UpdateProfileRequest;
 import com.project.render.Entity.Auth;
 import com.project.render.Entity.User;
 import com.project.render.IO.ProfileRequest;
@@ -82,6 +85,35 @@ public class UserController {
     @GetMapping("/get-user")
     public User getUser(@RequestParam String userId) {
         return profileService.findByUserId(userId);
+    }
+
+    @PatchMapping("/update-profile/{userId}")
+    public ProfileResponse updateProfile(
+            @PathVariable String userId,
+            @RequestBody UpdateProfileRequest request) {
+
+        return profileService.updateProfile(userId, request);
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(@RequestBody ChangePasswordRequest request) {
+
+        return profileService.changePassword(
+                request.getUserId(),
+                request.getCurrentPassword(),
+                request.getNewPassword()
+        );
+
+    }
+
+    @PostMapping("/delete-account")
+    public String deleteAccount(@RequestBody DeleteAccountRequest request) {
+
+        return profileService.deleteAccount(
+                request.getUserId(),
+                request.getPassword()
+        );
+
     }
 
 }

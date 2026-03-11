@@ -2,6 +2,7 @@ package com.project.render.Service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.project.render.DTO.UpdateProfileRequest;
 import com.project.render.Entity.User;
 import com.project.render.IO.ProfileRequest;
 import com.project.render.IO.ProfileResponse;
@@ -224,4 +225,51 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public ProfileResponse updateProfile(String userId, UpdateProfileRequest request) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            user.setName(request.getName().trim());
+        }
+
+        userRepository.save(user);
+
+        return ProfileResponse.builder()
+                .userId(user.getUserId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .isAccountVerified(user.getIsAccountVerified())
+                .build();
+    }
+
+    public String changePassword(String userId, String currentPassword, String newPassword) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return "Password updated successfully";
+    }
+
+    public String deleteAccount(String userId, String password) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
+        }
+
+        userRepository.delete(user);
+
+        return "Account deleted successfully";
+    }
 }
