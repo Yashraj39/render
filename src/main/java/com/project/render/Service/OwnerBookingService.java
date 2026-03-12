@@ -44,6 +44,9 @@ public class OwnerBookingService {
             int page,
             int size
     ) {
+
+        System.out.println("PRODUCTION TEST VERSION 2 IS DEPLOYED!!");
+
         List<Salon> ownerSalons = salonRepository.findBySalonOwnerId(ownerId);
 
         if (ownerSalons.isEmpty()) {
@@ -190,11 +193,6 @@ public class OwnerBookingService {
                 .map(CartItem::getServiceName)
                 .filter(Objects::nonNull)
                 .toList();
-
-        System.out.println("OWNER RAW START TIME = " + booking.getStartTime());
-        System.out.println("OWNER RAW END TIME = " + booking.getEndTime());
-        System.out.println("OWNER BOOKING DATE = " + booking.getBookingDate());
-        System.out.println("OWNER BOOKING ID = " + booking.getId());
 
         return OwnerBookingRowResponse.builder()
                 .bookingId(booking.getId())
