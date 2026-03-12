@@ -44,9 +44,6 @@ public class OwnerBookingService {
             int page,
             int size
     ) {
-
-        System.out.println("PRODUCTION TEST VERSION 2 IS DEPLOYED!!");
-
         List<Salon> ownerSalons = salonRepository.findBySalonOwnerId(ownerId);
 
         if (ownerSalons.isEmpty()) {
@@ -83,10 +80,7 @@ public class OwnerBookingService {
         filteredBookings = filteredBookings.stream()
                 .sorted(
                         Comparator.comparing(Booking::getBookingDate, Comparator.nullsLast(Comparator.reverseOrder()))
-                                .thenComparing(
-                                        booking -> toDisplayTime(booking.getStartTime()),
-                                        Comparator.nullsLast(Comparator.reverseOrder())
-                                )
+                                .thenComparing(Booking::getStartTime, Comparator.nullsLast(Comparator.reverseOrder()))
                 )
                 .toList();
 
@@ -139,11 +133,6 @@ public class OwnerBookingService {
                 .salons(salonOptions)
                 .barbers(barberOptions)
                 .build();
-    }
-
-    private LocalTime toDisplayTime(LocalTime time) {
-        if (time == null) return null;
-        return time.minusHours(5).minusMinutes(30);
     }
 
     private List<Booking> getFilteredBookings(
@@ -205,8 +194,8 @@ public class OwnerBookingService {
                 .barberId(booking.getBarberId())
                 .barberName(barber != null ? barber.getName() : null)
                 .bookingDate(booking.getBookingDate())
-                .startTime(toDisplayTime(booking.getStartTime()))
-                .endTime(toDisplayTime(booking.getEndTime()))
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
                 .serviceNames(services)
                 .totalPrice(booking.getTotalPrice())
                 .totalTime(booking.getTotalTime())
@@ -247,7 +236,7 @@ public class OwnerBookingService {
 
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-        LocalTime endTime = toDisplayTime(booking.getEndTime());
+        LocalTime endTime = booking.getEndTime();
 
         if (booking.getBookingDate() != null && endTime != null) {
             boolean completed =
