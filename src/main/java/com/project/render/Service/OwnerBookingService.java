@@ -13,7 +13,6 @@ import com.project.render.Repository.BookingRepository;
 import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -82,7 +81,7 @@ public class OwnerBookingService {
                 .sorted(
                         Comparator.comparing(Booking::getBookingDate, Comparator.nullsLast(Comparator.reverseOrder()))
                                 .thenComparing(
-                                        b -> correctMongoShiftedTime(b.getStartTime()),
+                                        booking -> toDisplayTime(booking.getStartTime()),
                                         Comparator.nullsLast(Comparator.reverseOrder())
                                 )
                 )
@@ -139,6 +138,11 @@ public class OwnerBookingService {
                 .build();
     }
 
+    private LocalTime toDisplayTime(LocalTime time) {
+        if (time == null) return null;
+        return time.minusHours(5).minusMinutes(30);
+    }
+
     private List<Booking> getFilteredBookings(
             List<String> ownerSalonIds,
             String salonId,
@@ -170,103 +174,6 @@ public class OwnerBookingService {
                 .toList();
     }
 
-    private Page<Booking> fetchBookings(
-            List<String> ownerSalonIds,
-            String salonId,
-            LocalDate date,
-            String barberId,
-            String status,
-            Pageable pageable
-    ) {
-        boolean hasSalon = salonId != null;
-        boolean hasDate = date != null;
-        boolean hasBarber = barberId != null;
-        boolean hasStatus = status != null;
-
-        // SAFETY: if salonId is passed, verify it belongs to owner
-        if (hasSalon && !ownerSalonIds.contains(salonId)) {
-            throw new RuntimeException("Unauthorized salon access");
-        }
-
-        if (hasSalon) {
-            if (hasBarber && hasDate && hasStatus) {
-                return bookingRepository.findBySalonIdAndBarberIdAndBookingDateAndStatus(
-                        salonId, barberId, date, status, pageable
-                );
-            }
-            if (hasBarber && hasDate) {
-                return bookingRepository.findBySalonIdAndBarberIdAndBookingDate(
-                        salonId, barberId, date, pageable
-                );
-            }
-            if (hasBarber && hasStatus) {
-                return bookingRepository.findBySalonIdAndBarberIdAndStatus(
-                        salonId, barberId, status, pageable
-                );
-            }
-            if (hasDate && hasStatus) {
-                return bookingRepository.findBySalonIdAndBookingDateAndStatus(
-                        salonId, date, status, pageable
-                );
-            }
-            if (hasBarber) {
-                return bookingRepository.findBySalonIdAndBarberId(
-                        salonId, barberId, pageable
-                );
-            }
-            if (hasDate) {
-                return bookingRepository.findBySalonIdAndBookingDate(
-                        salonId, date, pageable
-                );
-            }
-            if (hasStatus) {
-                return bookingRepository.findBySalonIdAndStatus(
-                        salonId, status, pageable
-                );
-            }
-            return bookingRepository.findBySalonId(salonId, pageable);
-        }
-
-        // no specific salon selected -> use owner's all salons
-        if (hasBarber && hasDate && hasStatus) {
-            return bookingRepository.findBySalonIdInAndBarberIdAndBookingDateAndStatus(
-                    ownerSalonIds, barberId, date, status, pageable
-            );
-        }
-        if (hasBarber && hasDate) {
-            return bookingRepository.findBySalonIdInAndBarberIdAndBookingDate(
-                    ownerSalonIds, barberId, date, pageable
-            );
-        }
-        if (hasBarber && hasStatus) {
-            return bookingRepository.findBySalonIdInAndBarberIdAndStatus(
-                    ownerSalonIds, barberId, status, pageable
-            );
-        }
-        if (hasDate && hasStatus) {
-            return bookingRepository.findBySalonIdInAndBookingDateAndStatus(
-                    ownerSalonIds, date, status, pageable
-            );
-        }
-        if (hasBarber) {
-            return bookingRepository.findBySalonIdInAndBarberId(
-                    ownerSalonIds, barberId, pageable
-            );
-        }
-        if (hasDate) {
-            return bookingRepository.findBySalonIdInAndBookingDate(
-                    ownerSalonIds, date, pageable
-            );
-        }
-        if (hasStatus) {
-            return bookingRepository.findBySalonIdInAndStatus(
-                    ownerSalonIds, status, pageable
-            );
-        }
-
-        return bookingRepository.findBySalonIdIn(ownerSalonIds, pageable);
-    }
-
     private OwnerBookingRowResponse mapToRow(
             Booking booking,
             Map<String, Salon> salonMap,
@@ -284,6 +191,11 @@ public class OwnerBookingService {
                 .filter(Objects::nonNull)
                 .toList();
 
+        System.out.println("OWNER RAW START TIME = " + booking.getStartTime());
+        System.out.println("OWNER RAW END TIME = " + booking.getEndTime());
+        System.out.println("OWNER BOOKING DATE = " + booking.getBookingDate());
+        System.out.println("OWNER BOOKING ID = " + booking.getId());
+
         return OwnerBookingRowResponse.builder()
                 .bookingId(booking.getId())
                 .userId(booking.getUserId())
@@ -295,19 +207,14 @@ public class OwnerBookingService {
                 .barberId(booking.getBarberId())
                 .barberName(barber != null ? barber.getName() : null)
                 .bookingDate(booking.getBookingDate())
-                .startTime(correctMongoShiftedTime(booking.getStartTime()))
-                .endTime(correctMongoShiftedTime(booking.getEndTime()))
+                .startTime(toDisplayTime(booking.getStartTime()))
+                .endTime(toDisplayTime(booking.getEndTime()))
                 .serviceNames(services)
                 .totalPrice(booking.getTotalPrice())
                 .totalTime(booking.getTotalTime())
                 .status(resolveDisplayStatus(booking))
                 .paymentStatus(booking.getPaymentStatus())
                 .build();
-    }
-
-    private LocalTime correctMongoShiftedTime(LocalTime time) {
-        if (time == null) return null;
-        return time.minusHours(5).minusMinutes(30);
     }
 
     private List<OwnerBookingFilterOptionDto> buildBarberOptions(List<Salon> ownerSalons, String selectedSalonId) {
@@ -342,13 +249,12 @@ public class OwnerBookingService {
 
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
+        LocalTime endTime = toDisplayTime(booking.getEndTime());
 
-        LocalTime correctedEndTime = correctMongoShiftedTime(booking.getEndTime());
-
-        if (booking.getBookingDate() != null && correctedEndTime != null) {
+        if (booking.getBookingDate() != null && endTime != null) {
             boolean completed =
                     booking.getBookingDate().isBefore(today) ||
-                            (booking.getBookingDate().isEqual(today) && correctedEndTime.isBefore(now));
+                            (booking.getBookingDate().isEqual(today) && endTime.isBefore(now));
 
             if (completed) {
                 return "COMPLETED";
