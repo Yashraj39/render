@@ -1,8 +1,17 @@
 package com.project.render.Service;
 
 import com.project.render.DTO.AvailableSlotResponse;
-import com.project.render.Entity.*;
-import com.project.render.Repository.*;
+import com.project.render.Entity.Barber;
+import com.project.render.Entity.Booking;
+import com.project.render.Entity.BookingCart;
+import com.project.render.Entity.CartItem;
+import com.project.render.Entity.Salon;
+import com.project.render.Entity.TemporaryInactiveSlot;
+import com.project.render.Repository.BarberRepository;
+import com.project.render.Repository.BookingCartRepository;
+import com.project.render.Repository.BookingRepository;
+import com.project.render.Repository.SalonRepository;
+import com.project.render.Repository.ServiceCrudRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -34,9 +42,7 @@ public class BookingCartService {
     @Autowired
     private BookingAvailabilityValidator bookingAvailabilityValidator;
 
-    // Add service to cart
     public BookingCart addServiceToCart(String userId, String salonId, String serviceId, String bookedBy, String customerName) {
-
         String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
                 .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
@@ -82,9 +88,7 @@ public class BookingCartService {
         return bookingCartRepository.save(cart);
     }
 
-    // Get cart (specific customer)
     public BookingCart getCart(String userId, String salonId, String customerName) {
-
         String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
                 .findByUserIdAndSalonIdAndCustomerName(userId, salonId, normalizedCustomerName)
@@ -104,7 +108,6 @@ public class BookingCartService {
         return cart;
     }
 
-    // Clear cart (specific customer)
     public void clearCart(String userId, String salonId, String customerName) {
         String normalizedCustomerName = customerName.toLowerCase().trim();
         Optional<BookingCart> bookingCart = bookingCartRepository
@@ -123,13 +126,11 @@ public class BookingCartService {
         });
     }
 
-    // Show available time slots
     public List<AvailableSlotResponse> showAvailableTimes(
             String barberId,
             int requiredMinutes,
             LocalDate bookingDate
     ) {
-
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
 
@@ -148,12 +149,11 @@ public class BookingCartService {
 
         List<AvailableSlotResponse> slots = new ArrayList<>();
 
-        ZoneId ZONE = ZoneId.of("Asia/Kolkata");
-        LocalDateTime now = LocalDateTime.now(ZONE);
+        ZoneId zone = ZoneId.of("Asia/Kolkata");
+        LocalDateTime now = LocalDateTime.now(zone);
 
         LocalDateTime currentSlotStart = bookingDate.atTime(workStart);
 
-// ✅ If booking date is today, start slots from "next 15-min boundary" in IST
         if (bookingDate.equals(now.toLocalDate()) && now.toLocalTime().isAfter(workStart)) {
             currentSlotStart = roundUpToNext15(now);
         }
@@ -169,7 +169,7 @@ public class BookingCartService {
             final LocalDateTime slotStartTime = currentSlotStart;
             final LocalDateTime slotEndTime = currentSlotEnd;
 
-            boolean overlaps = bookings.stream().anyMatch(b -> {
+            boolean overlapsBooking = bookings.stream().anyMatch(b -> {
                 LocalDateTime bookingStart = bookingDate.atTime(b.getStartTime());
                 LocalDateTime bookingEnd = bookingDate.atTime(b.getEndTime());
 
@@ -182,10 +182,11 @@ public class BookingCartService {
                 inLunch = slotStart.isBefore(lunchEnd) && slotEnd.isAfter(lunchStart);
             }
 
-// ✅ Past slot check should be based on slot START time
             boolean inPast = bookingDate.equals(now.toLocalDate()) && currentSlotStart.isBefore(now);
 
-            if (!overlaps && !inLunch && !inPast) {
+            boolean overlapsTemporaryInactive = overlapsTemporaryInactive(barber, bookingDate, slotStart, slotEnd);
+
+            if (!overlapsBooking && !inLunch && !inPast && !overlapsTemporaryInactive) {
                 slots.add(new AvailableSlotResponse(slotStart, slotEnd));
             }
 
@@ -193,6 +194,26 @@ public class BookingCartService {
         }
 
         return slots;
+    }
+
+    private boolean overlapsTemporaryInactive(
+            Barber barber,
+            LocalDate bookingDate,
+            LocalTime slotStart,
+            LocalTime slotEnd
+    ) {
+        if (barber.getTemporaryInactiveSlots() == null || barber.getTemporaryInactiveSlots().isEmpty()) {
+            return false;
+        }
+
+        return barber.getTemporaryInactiveSlots().stream()
+                .filter(slot -> slot.getDate() != null && slot.getDate().equals(bookingDate))
+                .anyMatch(slot ->
+                        slot.getStartTime() != null &&
+                                slot.getEndTime() != null &&
+                                slotStart.isBefore(slot.getEndTime()) &&
+                                slotEnd.isAfter(slot.getStartTime())
+                );
     }
 
     private LocalDateTime roundUpToNext15(LocalDateTime dt) {
@@ -206,7 +227,6 @@ public class BookingCartService {
         return base.plusMinutes(15 - mod);
     }
 
-    // Get cart count (specific customer)
     public int getCartCount(String userId, String salonId, String customerName) {
         String normalizedCustomerName = customerName.toLowerCase().trim();
         BookingCart cart = bookingCartRepository
@@ -218,9 +238,7 @@ public class BookingCartService {
         return (int) cart.getItems().stream().filter(item -> !item.isActive()).count();
     }
 
-    // Get all pending carts for user
     public List<Map<String, Object>> getUserPendingCarts(String userId) {
-
         List<BookingCart> carts = bookingCartRepository.findByUserId(userId);
 
         return carts.stream()

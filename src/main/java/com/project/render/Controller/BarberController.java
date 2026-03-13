@@ -4,6 +4,7 @@ import com.project.render.DTO.BarberCreateRequest;
 import com.project.render.DTO.BarberLeaveRequest;
 import com.project.render.DTO.BarberTemporaryInactiveRequest;
 import com.project.render.DTO.BarberUpdateRequest;
+import com.project.render.DTO.BarberVacationRequest;
 import com.project.render.DTO.BarberWeeklyOffRequest;
 import com.project.render.Entity.Barber;
 import com.project.render.Service.BarberService;
@@ -34,12 +35,22 @@ public class BarberController {
 
     @PatchMapping("/{barberId}/leaves")
     public Barber updateLeaves(@PathVariable String barberId, @RequestBody BarberLeaveRequest request) {
-        return barberService.updateLeaves(barberId, request.getLeaves(), request.getAutoCancelConflictingBookings(), request.getCancellationReason());
+        return barberService.updateLeaves(
+                barberId,
+                request.getLeaves(),
+                request.getAutoCancelConflictingBookings(),
+                request.getCancellationReason()
+        );
     }
 
     @PatchMapping("/{barberId}/weekly-off")
     public Barber updateWeeklyOff(@PathVariable String barberId, @RequestBody BarberWeeklyOffRequest request) {
-        return barberService.updateWeeklyOff(barberId, request.getWeeklyOffDays(), request.getAutoCancelConflictingBookings(), request.getCancellationReason());
+        return barberService.updateWeeklyOff(
+                barberId,
+                request.getWeeklyOffDays(),
+                request.getAutoCancelConflictingBookings(),
+                request.getCancellationReason()
+        );
     }
 
     @PatchMapping("/{barberId}")
@@ -48,17 +59,34 @@ public class BarberController {
     }
 
     @PostMapping("/{barberId}/temporary-inactive")
-    public Barber markTemporaryInactive(@PathVariable String barberId, @RequestBody BarberTemporaryInactiveRequest request) {
+    public Barber markTemporaryInactive(
+            @PathVariable String barberId,
+            @RequestBody BarberTemporaryInactiveRequest request
+    ) {
         return barberService.markTemporaryInactive(barberId, request);
-    }
-
-    @DeleteMapping("/{barberId}")
-    public String deleteBarber(@PathVariable String barberId) {
-        return barberService.deleteBarber(barberId);
     }
 
     @PostMapping("/{barberId}/cancel-temporary-inactive")
     public Barber cancelTemporaryInactive(@PathVariable String barberId) {
         return barberService.cancelTemporaryInactive(barberId);
+    }
+
+    @PatchMapping("/{barberId}/vacation")
+    public Barber addVacation(
+            @PathVariable String barberId,
+            @RequestBody BarberVacationRequest request
+    ) {
+        return barberService.addVacation(
+                barberId,
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getAutoCancelConflictingBookings(),
+                request.getCancellationReason()
+        );
+    }
+
+    @DeleteMapping("/{barberId}")
+    public String deleteBarber(@PathVariable String barberId) {
+        return barberService.deleteBarber(barberId);
     }
 }

@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class BarberService {
@@ -42,8 +41,18 @@ public class BarberService {
                 .orElseThrow(() -> new RuntimeException("Salon not found"));
 
         validateName(request.getName());
-        validateWorkingHours(request.getWorkingStartTime(), request.getWorkingEndTime(), request.getLunchStart(), request.getLunchEnd());
-        validateShiftInsideSalon(request.getWorkingStartTime(), request.getWorkingEndTime(), salon.getOpentime(), salon.getClosetime());
+        validateWorkingHours(
+                request.getWorkingStartTime(),
+                request.getWorkingEndTime(),
+                request.getLunchStart(),
+                request.getLunchEnd()
+        );
+        validateShiftInsideSalon(
+                request.getWorkingStartTime(),
+                request.getWorkingEndTime(),
+                salon.getOpentime(),
+                salon.getClosetime()
+        );
 
         Barber barber = Barber.builder()
                 .salonId(salonId)
@@ -55,6 +64,7 @@ public class BarberService {
                 .lunchEnd(request.getLunchEnd())
                 .leaves(normalizeLeaves(request.getLeaves()))
                 .weeklyOffDays(normalizeWeeklyOffDays(request.getWeeklyOffDays()))
+                .temporaryInactiveSlots(new ArrayList<>())
                 .build();
 
         Barber savedBarber = barberRepository.save(barber);
@@ -72,10 +82,24 @@ public class BarberService {
     }
 
     public List<Barber> getBarbersBySalon(String salonId) {
-        return barberRepository.findBySalonId(salonId);
+        List<Barber> barbers = barberRepository.findBySalonId(salonId);
+
+        for (Barber barber : barbers) {
+            boolean changed = removeExpiredTemporaryInactiveSlots(barber);
+            if (changed) {
+                barberRepository.save(barber);
+            }
+        }
+
+        return barbers;
     }
 
-    public Barber updateLeaves(String barberId, List<LocalDate> leaves, Boolean autoCancelConflictingBookings, String cancellationReason) {
+    public Barber updateLeaves(
+            String barberId,
+            List<LocalDate> leaves,
+            Boolean autoCancelConflictingBookings,
+            String cancellationReason
+    ) {
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
 
@@ -93,7 +117,12 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
-    public Barber updateWeeklyOff(String barberId, Set<DayOfWeek> weeklyOffDays, Boolean autoCancelConflictingBookings, String cancellationReason) {
+    public Barber updateWeeklyOff(
+            String barberId,
+            Set<DayOfWeek> weeklyOffDays,
+            Boolean autoCancelConflictingBookings,
+            String cancellationReason
+    ) {
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
 
@@ -132,7 +161,12 @@ public class BarberService {
                 .filter(b -> bookingFallsOutsideShift(b, workingStart, workingEnd, lunchStart, lunchEnd))
                 .toList();
 
-        handleConflictsIfNeeded(futureConfirmed, request.getAutoCancelConflictingBookings(), request.getCancellationReason(), "barber schedule update");
+        handleConflictsIfNeeded(
+                futureConfirmed,
+                request.getAutoCancelConflictingBookings(),
+                request.getCancellationReason(),
+                "barber schedule update"
+        );
 
         if (request.getActive() != null) {
             barber.setActive(request.getActive());
@@ -157,6 +191,8 @@ public class BarberService {
     public Barber markTemporaryInactive(String barberId, BarberTemporaryInactiveRequest request) {
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        removeExpiredTemporaryInactiveSlots(barber);
 
         if (request.getDate() == null || request.getStartTime() == null || request.getEndTime() == null) {
             throw new IllegalArgumentException("Date, start time and end time are required");
@@ -203,8 +239,57 @@ public class BarberService {
         );
 
         barber.getTemporaryInactiveSlots().add(slot);
+        return barberRepository.save(barber);
+    }
+
+    public Barber cancelTemporaryInactive(String barberId) {
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        barber.setTemporaryInactiveSlots(new ArrayList<>());
+        barber.setActive(true);
 
         return barberRepository.save(barber);
+    }
+
+    public Barber addVacation(
+            String barberId,
+            LocalDate startDate,
+            LocalDate endDate,
+            Boolean autoCancelConflictingBookings,
+            String cancellationReason
+    ) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Vacation start date and end date are required");
+        }
+
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Vacation end date cannot be before start date");
+        }
+
+        List<LocalDate> vacationDates = new ArrayList<>();
+        LocalDate current = startDate;
+
+        while (!current.isAfter(endDate)) {
+            vacationDates.add(current);
+            current = current.plusDays(1);
+        }
+
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        List<LocalDate> mergedLeaves = new ArrayList<>();
+        if (barber.getLeaves() != null) {
+            mergedLeaves.addAll(barber.getLeaves());
+        }
+        mergedLeaves.addAll(vacationDates);
+
+        return updateLeaves(
+                barberId,
+                mergedLeaves,
+                autoCancelConflictingBookings,
+                cancellationReason
+        );
     }
 
     public String deleteBarber(String barberId) {
@@ -352,13 +437,28 @@ public class BarberService {
         }
     }
 
-    public Barber cancelTemporaryInactive(String barberId) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+    private boolean removeExpiredTemporaryInactiveSlots(Barber barber) {
+        if (barber.getTemporaryInactiveSlots() == null || barber.getTemporaryInactiveSlots().isEmpty()) {
+            return false;
+        }
 
-        barber.setTemporaryInactiveSlots(new ArrayList<>());
+        int before = barber.getTemporaryInactiveSlots().size();
 
-        return barberRepository.save(barber);
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        barber.getTemporaryInactiveSlots().removeIf(slot -> {
+            if (slot.getDate() == null || slot.getEndTime() == null) {
+                return true;
+            }
+
+            if (slot.getDate().isBefore(today)) {
+                return true;
+            }
+
+            return slot.getDate().isEqual(today) && slot.getEndTime().isBefore(now);
+        });
+
+        return before != barber.getTemporaryInactiveSlots().size();
     }
-
 }
