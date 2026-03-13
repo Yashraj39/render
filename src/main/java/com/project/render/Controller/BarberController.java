@@ -56,4 +56,9 @@ public class BarberController {
     public String deleteBarber(@PathVariable String barberId) {
         return barberService.deleteBarber(barberId);
     }
+
+    @PostMapping("/{barberId}/cancel-temporary-inactive")
+    public Barber cancelTemporaryInactive(@PathVariable String barberId) {
+        return barberService.cancelTemporaryInactive(barberId);
+    }
 }

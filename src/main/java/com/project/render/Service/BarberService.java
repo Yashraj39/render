@@ -7,6 +7,7 @@ import com.project.render.DTO.BarberUpdateRequest;
 import com.project.render.Entity.Barber;
 import com.project.render.Entity.Booking;
 import com.project.render.Entity.Salon;
+import com.project.render.Entity.TemporaryInactiveSlot;
 import com.project.render.Exception.BookingConflictException;
 import com.project.render.Repository.BarberRepository;
 import com.project.render.Repository.BookingRepository;
@@ -192,6 +193,15 @@ public class BarberService {
             barber.setTemporaryInactiveSlots(new ArrayList<>());
         }
 
+        barber.getTemporaryInactiveSlots().removeIf(existing ->
+                existing.getDate() != null &&
+                        existing.getDate().equals(request.getDate()) &&
+                        existing.getStartTime() != null &&
+                        existing.getEndTime() != null &&
+                        request.getStartTime().equals(existing.getStartTime()) &&
+                        request.getEndTime().equals(existing.getEndTime())
+        );
+
         barber.getTemporaryInactiveSlots().add(slot);
 
         return barberRepository.save(barber);
@@ -341,4 +351,14 @@ public class BarberService {
             );
         }
     }
+
+    public Barber cancelTemporaryInactive(String barberId) {
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        barber.setTemporaryInactiveSlots(new ArrayList<>());
+
+        return barberRepository.save(barber);
+    }
+
 }
