@@ -8,4 +8,6 @@ import java.util.Set;
 @Data
 public class BarberWeeklyOffRequest {
     private Set<DayOfWeek> weeklyOffDays;
+    private Boolean autoCancelConflictingBookings;
+    private String cancellationReason;
 }
