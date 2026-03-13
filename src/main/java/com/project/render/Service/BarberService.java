@@ -153,7 +153,7 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
-    public void markTemporaryInactive(String barberId, BarberTemporaryInactiveRequest request) {
+    public Barber markTemporaryInactive(String barberId, BarberTemporaryInactiveRequest request) {
         Barber barber = barberRepository.findById(barberId)
                 .orElseThrow(() -> new RuntimeException("Barber not found"));
 
@@ -175,6 +175,9 @@ public class BarberService {
                 .toList();
 
         handleConflictsIfNeeded(conflicts, request.getAutoCancelConflictingBookings(), request.getReason(), "temporary inactivity");
+
+        barber.setActive(false);
+        return barberRepository.save(barber);
     }
 
     public String deleteBarber(String barberId) {

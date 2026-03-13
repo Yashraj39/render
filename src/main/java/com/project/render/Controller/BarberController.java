@@ -48,9 +48,8 @@ public class BarberController {
     }
 
     @PostMapping("/{barberId}/temporary-inactive")
-    public String markTemporaryInactive(@PathVariable String barberId, @RequestBody BarberTemporaryInactiveRequest request) {
-        barberService.markTemporaryInactive(barberId, request);
-        return "Barber marked unavailable successfully";
+    public Barber markTemporaryInactive(@PathVariable String barberId, @RequestBody BarberTemporaryInactiveRequest request) {
+        return barberService.markTemporaryInactive(barberId, request);
     }
 
     @DeleteMapping("/{barberId}")
