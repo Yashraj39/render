@@ -31,4 +31,5 @@ public class Barber {
 
     private List<LocalDate> leaves;
     private Set<DayOfWeek> weeklyOffDays;
+    private List<TemporaryInactiveSlot> temporaryInactiveSlots;
 }

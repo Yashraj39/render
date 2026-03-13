@@ -174,9 +174,26 @@ public class BarberService {
                 .filter(b -> request.getStartTime().isBefore(b.getEndTime()) && request.getEndTime().isAfter(b.getStartTime()))
                 .toList();
 
-        handleConflictsIfNeeded(conflicts, request.getAutoCancelConflictingBookings(), request.getReason(), "temporary inactivity");
+        handleConflictsIfNeeded(
+                conflicts,
+                request.getAutoCancelConflictingBookings(),
+                request.getReason(),
+                "temporary inactivity"
+        );
 
-        barber.setActive(false);
+        TemporaryInactiveSlot slot = TemporaryInactiveSlot.builder()
+                .date(request.getDate())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .reason(request.getReason())
+                .build();
+
+        if (barber.getTemporaryInactiveSlots() == null) {
+            barber.setTemporaryInactiveSlots(new ArrayList<>());
+        }
+
+        barber.getTemporaryInactiveSlots().add(slot);
+
         return barberRepository.save(barber);
     }
 
