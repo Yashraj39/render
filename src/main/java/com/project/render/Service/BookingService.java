@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -54,6 +55,9 @@ public class BookingService {
     @Autowired
     private SalonRepository salonRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public List<AvailableSlotResponse> getAvailableSlots(
             String userId,
             String salonId,
@@ -85,7 +89,12 @@ public class BookingService {
 
         bookingAvailabilityValidator.validateDayAvailability(barber, salon, request.getBookingDate());
         bookingAvailabilityValidator.validateTimeWithinShift(barber, request.getStartTime(), request.getEndTime());
-        validateTemporaryInactiveAvailability(barber, request.getBookingDate(), request.getStartTime(), request.getEndTime());
+        validateTemporaryInactiveAvailability(
+                barber,
+                request.getBookingDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
 
         List<Booking> bookings = bookingRepository.findByBarberIdAndBookingDateAndStatus(
                 request.getBarberId(), request.getBookingDate(), "CONFIRMED"
@@ -120,6 +129,41 @@ public class BookingService {
         bookingCartRepository.delete(cart);
 
         return booking;
+    }
+
+    public Booking ownerCancelBooking(String bookingId, String ownerId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if ("CANCELLED".equalsIgnoreCase(booking.getStatus())) {
+            throw new RuntimeException("Booking already cancelled");
+        }
+
+        Salon salon = salonRepository.findById(booking.getSalonId())
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (salon.getSalonOwnerId() == null || !salon.getSalonOwnerId().equals(ownerId)) {
+            throw new RuntimeException("You are not allowed to cancel this booking");
+        }
+
+        booking.setStatus("CANCELLED");
+        booking.setCancellationReason("Cancelled by owner");
+        booking.setCancelledBy("OWNER");
+        booking.setCancelledAt(LocalDateTime.now());
+
+        Booking savedBooking = bookingRepository.save(booking);
+
+        String bookingInfo = "for " + booking.getBookingDate() + " at " +
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
+
+        notificationService.createBookingCancelledNotification(
+                booking.getUserId(),
+                booking.getId(),
+                "Cancelled by owner",
+                bookingInfo
+        );
+
+        return savedBooking;
     }
 
     private void validateTemporaryInactiveAvailability(

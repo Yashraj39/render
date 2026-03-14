@@ -19,7 +19,7 @@ public class NotificationService {
                 .userId(userId)
                 .bookingId(bookingId)
                 .title("Booking Cancelled")
-                .message("Your booking " + bookingInfo + " has been cancelled. Reason: " + reason)
+                .message("Your booking " + bookingInfo + " has been cancelled by the salon owner. Reason: " + reason + ". Your refund will be processed within 3 working days.")
                 .type("BOOKING_CANCELLED")
                 .isRead(false)
                 .createdAt(LocalDateTime.now())

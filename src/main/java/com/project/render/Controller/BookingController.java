@@ -73,5 +73,13 @@ public class BookingController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }
+
+    @PostMapping("/{bookingId}/owner-cancel")
+    public Booking ownerCancelBooking(
+            @PathVariable String bookingId,
+            @RequestParam String ownerId
+    ) {
+        return bookingService.ownerCancelBooking(bookingId, ownerId);
+    }
 }
 
