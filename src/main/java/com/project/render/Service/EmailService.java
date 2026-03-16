@@ -73,4 +73,98 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    public void sendContactEmailToAdmin(String adminEmail, String name, String email, String phone, String subject, String message) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new RuntimeException("Brevo API key is not set!");
+        }
+
+        String url = "https://api.brevo.com/v3/smtp/email";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", apiKey);
+
+        String htmlContent =
+                "<div style='font-family: Arial, sans-serif; padding: 20px;'>" +
+                        "<h2 style='color:#2c3e50;'>New Contact Form Submission</h2>" +
+                        "<p><b>Name:</b> " + name + "</p>" +
+                        "<p><b>Email:</b> " + email + "</p>" +
+                        "<p><b>Phone:</b> " + phone + "</p>" +
+                        "<p><b>Subject:</b> " + subject + "</p>" +
+                        "<p><b>Message:</b></p>" +
+                        "<div style='background:#f4f4f4; padding:12px; border-radius:8px; border:1px solid #ddd;'>" +
+                        message +
+                        "</div>" +
+                        "<hr>" +
+                        "<p style='font-size:11px; color:#999;'>SlotMyStyle Contact Form</p>" +
+                        "</div>";
+
+        Map<String, Object> body = new HashMap<>();
+
+        Map<String, String> sender = new HashMap<>();
+        sender.put("email", fromEmail);
+
+        Map<String, String> recipient = new HashMap<>();
+        recipient.put("email", adminEmail);
+
+        body.put("sender", sender);
+        body.put("to", new Object[]{recipient});
+        body.put("subject", "New Contact Query - " + subject);
+        body.put("htmlContent", htmlContent);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        restTemplate.postForEntity(url, request, String.class);
+    }
+
+    public void sendContactAutoReplyToUser(String to, String name, String subject, String message) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new RuntimeException("Brevo API key is not set!");
+        }
+
+        String url = "https://api.brevo.com/v3/smtp/email";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", apiKey);
+
+        String htmlContent =
+                "<div style='font-family: Arial, sans-serif; padding: 20px;'>" +
+                        "<h2 style='color:#2c3e50;'>We received your message</h2>" +
+                        "<p>Hello <b>" + name + "</b>,</p>" +
+                        "<p>Thank you for contacting SlotMyStyle. We have received your query.</p>" +
+                        "<p><b>Subject:</b> " + subject + "</p>" +
+                        "<p><b>Your Message:</b></p>" +
+                        "<div style='background:#f4f4f4; padding:12px; border-radius:8px; border:1px solid #ddd;'>" +
+                        message +
+                        "</div>" +
+                        "<br>" +
+                        "<p>Our team will get back to you as soon as possible.</p>" +
+                        "<hr>" +
+                        "<p style='font-size:11px; color:#999;'>SlotMyStyle Support Team</p>" +
+                        "</div>";
+
+        Map<String, Object> body = new HashMap<>();
+
+        Map<String, String> sender = new HashMap<>();
+        sender.put("email", fromEmail);
+
+        Map<String, String> recipient = new HashMap<>();
+        recipient.put("email", to);
+
+        body.put("sender", sender);
+        body.put("to", new Object[]{recipient});
+        body.put("subject", "We received your query - SlotMyStyle");
+        body.put("htmlContent", htmlContent);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        restTemplate.postForEntity(url, request, String.class);
+    }
+
 }
