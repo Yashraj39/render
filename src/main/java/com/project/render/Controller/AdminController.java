@@ -1,43 +1,21 @@
 package com.project.render.Controller;
 
-import com.project.render.DTO.AdminDecisionRequest;
-import com.project.render.Entity.OwnerApplication;
-import com.project.render.Entity.Salon;
-import com.project.render.Service.OwnerApplicationService;
+import com.project.render.DTO.AdminLoginRequest;
+import com.project.render.DTO.AdminLoginResponse;
+import com.project.render.Service.AdminAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("api/admin/owner")
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = {"http://localhost:5173", "https://salon-frontend-vercel-project.vercel.app"})
 public class AdminController {
 
     @Autowired
-    private OwnerApplicationService ownerApplicationService;
+    private AdminAuthService authService;
 
-    @GetMapping("/applications")
-    public List<OwnerApplication> list(@RequestParam String status) {
-        return ownerApplicationService.listByStatus(status);
+    @PostMapping("/login")
+    public AdminLoginResponse login(@RequestBody AdminLoginRequest request) {
+        return authService.login(request);
     }
-
-    @PatchMapping("/applications/{id}/approve")
-    public OwnerApplication approve(@PathVariable String id, @RequestBody AdminDecisionRequest req) {
-        return ownerApplicationService.approve(id, req);
-    }
-
-    @PatchMapping("/applications/{id}/reject")
-    public OwnerApplication reject(@PathVariable String id, @RequestBody AdminDecisionRequest req) {
-        return ownerApplicationService.reject(id, req);
-    }
-
-    @PatchMapping("/verify-salon/{salonId}")
-    public Salon verifySalon(
-            @PathVariable String salonId,
-            @RequestParam String adminId,
-            @RequestParam(required = false) String note
-    ) {
-        return ownerApplicationService.verifySalon(salonId, adminId, note);
-    }
-
 }
