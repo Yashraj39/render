@@ -13,6 +13,11 @@ public class AdminServiceCategoryController {
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
 
+    @GetMapping("/all")
+    public java.util.List<ServiceCategory> getAll() {
+        return serviceCategoryRepository.findAll();
+    }
+
     @PostMapping("/create")
     public ServiceCategory create(@RequestBody ServiceCategory category) {
         category.setId(null);
