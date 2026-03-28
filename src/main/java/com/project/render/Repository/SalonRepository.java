@@ -17,4 +17,6 @@ public interface SalonRepository extends MongoRepository<Salon, String> {
     long deleteBySalonOwnerId(String salonOwnerId);
 
     List<Salon> findByIsVerifiedTrue();
+
+    List<Salon> findByIsVerifiedFalse();
 }

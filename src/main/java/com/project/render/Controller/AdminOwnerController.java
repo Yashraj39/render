@@ -22,6 +22,11 @@ public class AdminOwnerController {
     @Autowired
     private AdminAuthService adminAuthService;
 
+    @GetMapping("/unverified-salons")
+    public List<Salon> getUnverifiedSalons() {
+        return ownerApplicationService.getUnverifiedSalons();
+    }
+
     @GetMapping("/applications")
     public List<OwnerApplication> list(@RequestParam String status) {
         return ownerApplicationService.listByStatus(status);

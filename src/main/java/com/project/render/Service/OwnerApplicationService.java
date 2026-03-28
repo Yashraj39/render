@@ -71,7 +71,7 @@ public class OwnerApplicationService {
 
     public OwnerApplication approve(String applicationId, AdminDecisionRequest req){
         User admin = userRepository.findByUserId(req.getAdminId())
-                .orElseThrow(()-> new RuntimeException("Admin not found"));
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
 
         if(!"ADMIN".equalsIgnoreCase(admin.getRole()))
             throw new RuntimeException("Unauthorized");
@@ -79,8 +79,11 @@ public class OwnerApplicationService {
         OwnerApplication app = ownerApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
-        if (!"PENDING".equals(app.getStatus()))
-            throw new RuntimeException("Not pending");
+        if (!"PENDING".equalsIgnoreCase(app.getStatus()))
+            throw new RuntimeException("This application has already been processed");
+
+        User user = userRepository.findByUserId(app.getUserId())
+                .orElseThrow(() -> new RuntimeException("Linked user not found for this application"));
 
         app.setStatus("APPROVED");
         app.setReviewedBy(req.getAdminId());
@@ -88,9 +91,6 @@ public class OwnerApplicationService {
         app.setAdminNote(req.getNote());
 
         OwnerApplication saved = ownerApplicationRepository.save(app);
-
-        User user = userRepository.findByUserId(app.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setRole("OWNER");
         userRepository.save(user);
@@ -109,8 +109,8 @@ public class OwnerApplicationService {
         OwnerApplication app = ownerApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
-        if (!"PENDING".equals(app.getStatus()))
-            throw new RuntimeException("Not pending");
+        if (!"PENDING".equalsIgnoreCase(app.getStatus()))
+            throw new RuntimeException("This application has already been processed");
 
         app.setStatus("REJECTED");
         app.setReviewedBy(req.getAdminId());
@@ -120,7 +120,7 @@ public class OwnerApplicationService {
         OwnerApplication saved = ownerApplicationRepository.save(app);
 
         User user = userRepository.findByUserId(app.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Linked user not found for this application"));
 
         user.setRole("USER");
         userRepository.save(user);
@@ -161,4 +161,7 @@ public class OwnerApplicationService {
         return salonRepository.save(salon);
     }
 
+    public List<Salon> getUnverifiedSalons() {
+        return salonRepository.findByIsVerifiedFalse();
+    }
 }
