@@ -41,6 +41,13 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Email already exists");
         }
 
+        if (!isStrongPassword(request.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Password must be at least 8 characters and include uppercase, lowercase, and one symbol"
+            );
+        }
+
         String generatedOtp = generateOtp();
         User newUser = User.builder()
                 .email(request.getEmail())
@@ -63,6 +70,11 @@ public class UserService {
                 .email(newUser.getEmail())
                 .isAccountVerified(newUser.getIsAccountVerified())
                 .build();
+    }
+
+    private boolean isStrongPassword(String password) {
+        return password != null &&
+                password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$");
     }
 
     public String verifyOtp(String email, String otp) {
@@ -167,6 +179,13 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Reset OTP not verified");
         }
 
+        if (!isStrongPassword(newPassword)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Password must be at least 8 characters and include uppercase, lowercase, and one symbol"
+            );
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetOtp(null);
         user.setResetOtpExpireAt(0L);
@@ -251,6 +270,13 @@ public class UserService {
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password incorrect");
+        }
+
+        if (!isStrongPassword(newPassword)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Password must be at least 8 characters and include uppercase, lowercase, and one symbol"
+            );
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
