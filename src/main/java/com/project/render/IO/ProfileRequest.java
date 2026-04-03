@@ -1,9 +1,6 @@
 package com.project.render.IO;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +21,10 @@ public class ProfileRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, max = 8, message = "Password must be atleast 6 characters")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$",
+            message = "Password must be at least 8 characters and include uppercase, lowercase, and one symbol"
+    )
     private String password;
 
 }
