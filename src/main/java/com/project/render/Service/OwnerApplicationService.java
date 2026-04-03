@@ -27,6 +27,9 @@ public class OwnerApplicationService {
     @Autowired
     private SalonRepository salonRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public OwnerApplication submit(OwnerApplyRequest req){
 
         if(req.getTermsAccepted() == null || !req.getTermsAccepted())
@@ -98,12 +101,12 @@ public class OwnerApplicationService {
         return saved;
     }
 
-    public OwnerApplication reject(String applicationId, AdminDecisionRequest req) {
+    public String reject(String applicationId, AdminDecisionRequest req) {
 
         User admin = userRepository.findByUserId(req.getAdminId())
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        if (!"ADMIN".equals(admin.getRole()))
+        if (!"ADMIN".equalsIgnoreCase(admin.getRole()))
             throw new RuntimeException("Unauthorized");
 
         OwnerApplication app = ownerApplicationRepository.findById(applicationId)
@@ -112,20 +115,27 @@ public class OwnerApplicationService {
         if (!"PENDING".equalsIgnoreCase(app.getStatus()))
             throw new RuntimeException("This application has already been processed");
 
-        app.setStatus("REJECTED");
-        app.setReviewedBy(req.getAdminId());
-        app.setReviewedAt(new Date());
-        app.setAdminNote(req.getNote());
-
-        OwnerApplication saved = ownerApplicationRepository.save(app);
-
         User user = userRepository.findByUserId(app.getUserId())
-                .orElseThrow(() -> new RuntimeException("Linked user not found for this application"));
+                .orElseThrow(() -> new RuntimeException("Linked user not found"));
+
+        String reason = (req.getNote() != null && !req.getNote().trim().isEmpty())
+                ? req.getNote().trim()
+                : "No reason provided";
+
+        notificationService.createNotification(
+                app.getUserId(),
+                "Owner Application Rejected",
+                "Your owner application was rejected. Reason: " + reason,
+                "OWNER_APPLICATION_REJECTED",
+                "USER"
+        );
 
         user.setRole("USER");
         userRepository.save(user);
 
-        return saved;
+        ownerApplicationRepository.deleteById(applicationId);
+
+        return "Owner application rejected and deleted successfully";
     }
 
     public String removeOwner(String userId) {
@@ -155,13 +165,41 @@ public class OwnerApplicationService {
             throw new RuntimeException("User is not admin");
 
         salon.setVerified(true);
+        salon.setVerificationStatus("APPROVED");
+        salon.setRejectionReason(null);
         salon.setVerifiedByAdminId(adminId);
         salon.setAdminNote(note);
 
         return salonRepository.save(salon);
     }
 
+    public String rejectSalon(String salonId, String adminId, String reason) {
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        User admin = userRepository.findByUserId(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!"ADMIN".equalsIgnoreCase(admin.getRole()))
+            throw new RuntimeException("User is not admin");
+
+        if (reason == null || reason.trim().isEmpty())
+            throw new RuntimeException("Disapprove reason is required");
+
+        notificationService.createNotification(
+                salon.getSalonOwnerId(),
+                "Salon Rejected",
+                "Your salon \"" + salon.getName() + "\" was disapproved by admin. Reason: " + reason.trim(),
+                "SALON_REJECTED",
+                "OWNER"
+        );
+
+        salonRepository.deleteById(salonId);
+
+        return "Salon disapproved and deleted successfully";
+    }
+
     public List<Salon> getUnverifiedSalons() {
-        return salonRepository.findByIsVerifiedFalse();
+        return salonRepository.findByVerificationStatus("PENDING");
     }
 }

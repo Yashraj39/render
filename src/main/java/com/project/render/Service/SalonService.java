@@ -117,6 +117,8 @@ public class SalonService {
 
         salon.setDocumentType(documentType);
         salon.setDocumentUrl(docUrl);
+        salon.setVerificationStatus("PENDING");
+        salon.setVerified(false);
 
         return salonRepository.save(salon);
     }

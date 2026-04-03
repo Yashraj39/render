@@ -38,7 +38,7 @@ public class AdminOwnerController {
     }
 
     @PatchMapping("/applications/{id}/reject")
-    public OwnerApplication reject(@PathVariable String id, @RequestBody AdminDecisionRequest req) {
+    public String reject(@PathVariable String id, @RequestBody AdminDecisionRequest req) {
         return ownerApplicationService.reject(id, req);
     }
 
@@ -51,9 +51,17 @@ public class AdminOwnerController {
         return ownerApplicationService.verifySalon(salonId, adminId, note);
     }
 
+    @PatchMapping("/reject-salon/{salonId}")
+    public String rejectSalon(
+            @PathVariable String salonId,
+            @RequestParam String adminId,
+            @RequestParam String reason
+    ) {
+        return ownerApplicationService.rejectSalon(salonId, adminId, reason);
+    }
+
     @PostMapping("/login")
     public AdminLoginResponse login(@RequestBody AdminLoginRequest request) {
         return adminAuthService.login(request);
     }
-
 }

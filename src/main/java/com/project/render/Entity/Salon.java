@@ -49,6 +49,8 @@ public class Salon {
     private List<String> serviceIds;
 
     private boolean isVerified = false;   // default false
+    private String verificationStatus; // PENDING, APPROVED, REJECTED
+    private String rejectionReason;
     private String verifiedByAdminId;
     private String adminNote;
     private Set<DayOfWeek> weeklyOffDays;

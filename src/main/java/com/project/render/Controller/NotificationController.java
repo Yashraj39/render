@@ -16,8 +16,11 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @GetMapping("/user/{userId}")
-    public List<Notification> getUserNotifications(@PathVariable String userId) {
-        return notificationService.getUserNotifications(userId);
+    public List<Notification> getUserNotifications(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "USER") String audience
+    ) {
+        return notificationService.getNotificationsByAudience(userId, audience);
     }
 
     @PutMapping("/read/{notificationId}")
@@ -26,8 +29,11 @@ public class NotificationController {
     }
 
     @PutMapping("/read-all/{userId}")
-    public List<Notification> markAllAsRead(@PathVariable String userId) {
-        return notificationService.markAllAsRead(userId);
+    public List<Notification> markAllAsRead(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "USER") String audience
+    ) {
+        return notificationService.markAllAsReadByAudience(userId, audience);
     }
 
     @DeleteMapping("/{notificationId}")

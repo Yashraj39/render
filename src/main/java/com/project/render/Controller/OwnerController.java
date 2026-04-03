@@ -13,6 +13,7 @@ import com.project.render.Service.SalonService;
 import jakarta.mail.Multipart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -70,8 +71,16 @@ public class OwnerController {
     }
 
     @GetMapping("/application")
-    public OwnerApplication application(@RequestParam String userId) {
-        return ownerApplicationService.latest(userId);
+    public ResponseEntity<?> latest(@RequestParam String userId) {
+        try {
+            OwnerApplication app = ownerApplicationService.latest(userId);
+            return ResponseEntity.ok(app);
+        } catch (RuntimeException e) {
+            if ("Application not found".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Application not found");
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/remove-owner")

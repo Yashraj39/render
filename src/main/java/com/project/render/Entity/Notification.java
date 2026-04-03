@@ -21,4 +21,5 @@ public class Notification {
     private String type;
     private Boolean isRead;
     private LocalDateTime createdAt;
+    private String audience;
 }

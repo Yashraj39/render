@@ -19,4 +19,6 @@ public interface SalonRepository extends MongoRepository<Salon, String> {
     List<Salon> findByIsVerifiedTrue();
 
     List<Salon> findByIsVerifiedFalse();
+
+    List<Salon> findByVerificationStatus(String verificationStatus);
 }
