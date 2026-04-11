@@ -58,6 +58,7 @@ public class UserService {
                 .verifyOtp(generatedOtp)
                 .verifiedOtpExpireAt(System.currentTimeMillis() + 5*60*1000)
                 .role("USER")
+                .ownerFrozen(false)
                 .build();
 
         userRepository.save(newUser);
@@ -115,6 +116,7 @@ public class UserService {
                 .email(user.getEmail())
                 .isAccountVerified(user.getIsAccountVerified())
                 .role(user.getRole())
+                .ownerFrozen(user.getOwnerFrozen())
                 .build();
     }
 
@@ -263,6 +265,7 @@ public class UserService {
                 .email(user.getEmail())
                 .isAccountVerified(user.getIsAccountVerified())
                 .role(user.getRole())
+                .ownerFrozen(false)
                 .build();
     }
 

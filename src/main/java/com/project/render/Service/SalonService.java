@@ -37,6 +37,9 @@ public class SalonService {
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
 
+    @Autowired
+    private OwnerApplicationService ownerApplicationService;
+
     private String upload(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) return null;
 
@@ -70,6 +73,8 @@ public class SalonService {
             DocumentType documentType,
             MultipartFile document
     ) {
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
 
         Optional<User> ownerOpt = userRepository.findByUserId(ownerId);
 
@@ -204,6 +209,9 @@ public class SalonService {
 
             MultipartFile cover
     ) {
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
+
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(() -> new RuntimeException("Salon not found"));
 
@@ -238,6 +246,8 @@ public class SalonService {
     }
 
     public void deleteSalon(String salonId, String ownerId) {
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
 
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(() -> new RuntimeException("Salon not found"));

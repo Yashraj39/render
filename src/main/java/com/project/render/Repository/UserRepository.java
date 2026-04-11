@@ -3,6 +3,7 @@ package com.project.render.Repository;
 import com.project.render.Entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, String> {
@@ -12,5 +13,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     Boolean existsByEmail(String email);
 
     Optional<User> findByUserId(String userId);
+
+    List<User> findByRoleIgnoreCase(String role);
 
 }

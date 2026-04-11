@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 @Document(collection = "users")
 @Data
@@ -36,6 +37,11 @@ public class User {
     private Boolean isResetOtpVerified;
 
     private String role;
+
+    private Boolean ownerFrozen = false;
+    private String frozenByAdminId;
+    private String freezeReason;
+    private Date ownerFrozenAt;
 
     @CreatedDate
     private Timestamp createdAt;

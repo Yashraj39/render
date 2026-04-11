@@ -3,6 +3,9 @@ package com.project.render.Controller;
 import com.project.render.DTO.AdminDecisionRequest;
 import com.project.render.DTO.AdminLoginRequest;
 import com.project.render.DTO.AdminLoginResponse;
+import com.project.render.DTO.AdminOwnerActionRequest;
+import com.project.render.DTO.AdminOwnerMessageRequest;
+import com.project.render.DTO.OwnerSummaryResponse;
 import com.project.render.Entity.OwnerApplication;
 import com.project.render.Entity.Salon;
 import com.project.render.Service.AdminAuthService;
@@ -14,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/admin/owner")
+@CrossOrigin(origins = {"http://localhost:5173", "https://salon-frontend-vercel-project.vercel.app"})
 public class AdminOwnerController {
 
     @Autowired
@@ -58,6 +62,43 @@ public class AdminOwnerController {
             @RequestParam String reason
     ) {
         return ownerApplicationService.rejectSalon(salonId, adminId, reason);
+    }
+
+    @GetMapping("/manage")
+    public List<OwnerSummaryResponse> getAllOwners() {
+        return ownerApplicationService.getAllOwners();
+    }
+
+    @PatchMapping("/freeze/{ownerUserId}")
+    public String freezeOwner(
+            @PathVariable String ownerUserId,
+            @RequestBody AdminOwnerActionRequest req
+    ) {
+        return ownerApplicationService.freezeOwner(ownerUserId, req);
+    }
+
+    @PatchMapping("/unfreeze/{ownerUserId}")
+    public String unfreezeOwner(
+            @PathVariable String ownerUserId,
+            @RequestBody AdminOwnerActionRequest req
+    ) {
+        return ownerApplicationService.unfreezeOwner(ownerUserId, req);
+    }
+
+    @DeleteMapping("/remove/{ownerUserId}")
+    public String removeOwner(
+            @PathVariable String ownerUserId,
+            @RequestBody AdminOwnerActionRequest req
+    ) {
+        return ownerApplicationService.removeOwner(ownerUserId, req);
+    }
+
+    @PostMapping("/notify/{ownerUserId}")
+    public String notifyOwner(
+            @PathVariable String ownerUserId,
+            @RequestBody AdminOwnerMessageRequest req
+    ) {
+        return ownerApplicationService.sendAdminMessageToOwner(ownerUserId, req);
     }
 
     @PostMapping("/login")

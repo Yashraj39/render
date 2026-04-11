@@ -83,9 +83,6 @@ public class OwnerController {
         }
     }
 
-    @DeleteMapping("/remove-owner")
-    public String removeOwner(@RequestParam String userId) { return ownerApplicationService.removeOwner(userId); }
-
     @GetMapping("/bookings")
     public ResponseEntity<OwnerBookingsPageResponse> getOwnerBookings(
             @RequestParam String ownerId,
