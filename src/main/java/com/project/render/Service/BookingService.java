@@ -4,15 +4,8 @@ import com.project.render.DTO.AvailableSlotResponse;
 import com.project.render.DTO.BookingDetailsResponse;
 import com.project.render.DTO.ConfirmBookingRequest;
 import com.project.render.DTO.UserBookingCardResponse;
-import com.project.render.Entity.Barber;
-import com.project.render.Entity.Booking;
-import com.project.render.Entity.BookingCart;
-import com.project.render.Entity.CartItem;
-import com.project.render.Entity.Salon;
-import com.project.render.Repository.BarberRepository;
-import com.project.render.Repository.BookingCartRepository;
-import com.project.render.Repository.BookingRepository;
-import com.project.render.Repository.SalonRepository;
+import com.project.render.Entity.*;
+import com.project.render.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +51,25 @@ public class BookingService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private void validateSalonBookingAllowed(String salonId) {
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (salon.getSalonOwnerId() == null || salon.getSalonOwnerId().isBlank()) {
+            throw new RuntimeException("Salon owner not found");
+        }
+
+        User owner = userRepository.findByUserId(salon.getSalonOwnerId())
+                .orElseThrow(() -> new RuntimeException("Salon owner not found"));
+
+        if (Boolean.TRUE.equals(owner.getOwnerFrozen())) {
+            throw new RuntimeException("Bookings are temporarily unavailable for this salon");
+        }
+    }
+
     public List<AvailableSlotResponse> getAvailableSlots(
             String userId,
             String salonId,
@@ -65,6 +77,9 @@ public class BookingService {
             String customerName,
             LocalDate date
     ) {
+
+        validateSalonBookingAllowed(salonId);
+
         BookingCart cart = getCart(userId, salonId, customerName);
 
         return bookingCartService.showAvailableTimes(
@@ -75,6 +90,9 @@ public class BookingService {
     }
 
     public Booking confirmBooking(ConfirmBookingRequest request) {
+
+        validateSalonBookingAllowed(request.getSalonId());
+
         BookingCart cart = getCart(
                 request.getUserId(),
                 request.getSalonId(),
