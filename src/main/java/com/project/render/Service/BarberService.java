@@ -36,9 +36,11 @@ public class BarberService {
     @Autowired
     private NotificationService notificationService;
 
-    public Barber addBarber(String salonId, BarberCreateRequest request) {
-        Salon salon = salonRepository.findById(salonId)
-                .orElseThrow(() -> new RuntimeException("Salon not found"));
+    @Autowired
+    private OwnerApplicationService ownerApplicationService;
+
+    public Barber addBarber(String ownerId, String salonId, BarberCreateRequest request) {
+        Salon salon = validateSalonOwnership(ownerId, salonId);
 
         validateName(request.getName());
         validateWorkingHours(
@@ -95,13 +97,13 @@ public class BarberService {
     }
 
     public Barber updateLeaves(
+            String ownerId,
             String barberId,
             List<LocalDate> leaves,
             Boolean autoCancelConflictingBookings,
             String cancellationReason
     ) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         List<LocalDate> normalizedLeaves = normalizeLeaves(leaves);
 
@@ -118,13 +120,13 @@ public class BarberService {
     }
 
     public Barber updateWeeklyOff(
+            String ownerId,
             String barberId,
             Set<DayOfWeek> weeklyOffDays,
             Boolean autoCancelConflictingBookings,
             String cancellationReason
     ) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         Set<DayOfWeek> normalizedDays = normalizeWeeklyOffDays(weeklyOffDays);
 
@@ -140,9 +142,8 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
-    public Barber updateBarber(String barberId, BarberUpdateRequest request) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+    public Barber updateBarber(String ownerId, String barberId, BarberUpdateRequest request) {
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         Salon salon = salonRepository.findById(barber.getSalonId())
                 .orElseThrow(() -> new RuntimeException("Salon not found"));
@@ -188,9 +189,8 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
-    public Barber markTemporaryInactive(String barberId, BarberTemporaryInactiveRequest request) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+    public Barber markTemporaryInactive(String ownerId, String barberId, BarberTemporaryInactiveRequest request) {
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         removeExpiredTemporaryInactiveSlots(barber);
 
@@ -242,9 +242,8 @@ public class BarberService {
         return barberRepository.save(barber);
     }
 
-    public Barber cancelTemporaryInactive(String barberId) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+    public Barber cancelTemporaryInactive(String ownerId, String barberId) {
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         barber.setTemporaryInactiveSlots(new ArrayList<>());
         barber.setActive(true);
@@ -253,12 +252,15 @@ public class BarberService {
     }
 
     public Barber addVacation(
+            String ownerId,
             String barberId,
             LocalDate startDate,
             LocalDate endDate,
             Boolean autoCancelConflictingBookings,
             String cancellationReason
     ) {
+        validateBarberOwnership(ownerId, barberId);
+
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Vacation start date and end date are required");
         }
@@ -285,6 +287,7 @@ public class BarberService {
         mergedLeaves.addAll(vacationDates);
 
         return updateLeaves(
+                ownerId,
                 barberId,
                 mergedLeaves,
                 autoCancelConflictingBookings,
@@ -292,9 +295,8 @@ public class BarberService {
         );
     }
 
-    public String deleteBarber(String barberId) {
-        Barber barber = barberRepository.findById(barberId)
-                .orElseThrow(() -> new RuntimeException("Barber not found"));
+    public String deleteBarber(String ownerId, String barberId) {
+        Barber barber = validateBarberOwnership(ownerId, barberId);
 
         List<Booking> futureConfirmed = bookingRepository.findByBarberIdAndStatus(barberId, "CONFIRMED")
                 .stream()
@@ -315,6 +317,35 @@ public class BarberService {
 
         barberRepository.delete(barber);
         return "barber deleted successfully";
+    }
+
+    private Salon validateSalonOwnership(String ownerId, String salonId) {
+        ownerApplicationService.validateOwnerAccess(ownerId);
+
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (!ownerId.equals(salon.getSalonOwnerId())) {
+            throw new RuntimeException("Unauthorized: you cannot manage this salon");
+        }
+
+        return salon;
+    }
+
+    private Barber validateBarberOwnership(String ownerId, String barberId) {
+        ownerApplicationService.validateOwnerAccess(ownerId);
+
+        Barber barber = barberRepository.findById(barberId)
+                .orElseThrow(() -> new RuntimeException("Barber not found"));
+
+        Salon salon = salonRepository.findById(barber.getSalonId())
+                .orElseThrow(() -> new RuntimeException("Salon not found"));
+
+        if (!ownerId.equals(salon.getSalonOwnerId())) {
+            throw new RuntimeException("Unauthorized: you cannot manage this barber");
+        }
+
+        return barber;
     }
 
     private void validateName(String name) {

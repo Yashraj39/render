@@ -22,10 +22,11 @@ public class BarberController {
 
     @PostMapping("/add/{salonId}")
     public Barber addBarber(
+            @RequestParam String ownerId,
             @PathVariable String salonId,
             @RequestBody BarberCreateRequest request
     ) {
-        return barberService.addBarber(salonId, request);
+        return barberService.addBarber(ownerId, salonId, request);
     }
 
     @GetMapping("/salon/{salonId}")
@@ -34,8 +35,13 @@ public class BarberController {
     }
 
     @PatchMapping("/{barberId}/leaves")
-    public Barber updateLeaves(@PathVariable String barberId, @RequestBody BarberLeaveRequest request) {
+    public Barber updateLeaves(
+            @RequestParam String ownerId,
+            @PathVariable String barberId,
+            @RequestBody BarberLeaveRequest request
+    ) {
         return barberService.updateLeaves(
+                ownerId,
                 barberId,
                 request.getLeaves(),
                 request.getAutoCancelConflictingBookings(),
@@ -44,8 +50,13 @@ public class BarberController {
     }
 
     @PatchMapping("/{barberId}/weekly-off")
-    public Barber updateWeeklyOff(@PathVariable String barberId, @RequestBody BarberWeeklyOffRequest request) {
+    public Barber updateWeeklyOff(
+            @RequestParam String ownerId,
+            @PathVariable String barberId,
+            @RequestBody BarberWeeklyOffRequest request
+    ) {
         return barberService.updateWeeklyOff(
+                ownerId,
                 barberId,
                 request.getWeeklyOffDays(),
                 request.getAutoCancelConflictingBookings(),
@@ -54,29 +65,39 @@ public class BarberController {
     }
 
     @PatchMapping("/{barberId}")
-    public Barber updateBarber(@PathVariable String barberId, @RequestBody BarberUpdateRequest request) {
-        return barberService.updateBarber(barberId, request);
+    public Barber updateBarber(
+            @RequestParam String ownerId,
+            @PathVariable String barberId,
+            @RequestBody BarberUpdateRequest request
+    ) {
+        return barberService.updateBarber(ownerId, barberId, request);
     }
 
     @PostMapping("/{barberId}/temporary-inactive")
     public Barber markTemporaryInactive(
+            @RequestParam String ownerId,
             @PathVariable String barberId,
             @RequestBody BarberTemporaryInactiveRequest request
     ) {
-        return barberService.markTemporaryInactive(barberId, request);
+        return barberService.markTemporaryInactive(ownerId, barberId, request);
     }
 
     @PostMapping("/{barberId}/cancel-temporary-inactive")
-    public Barber cancelTemporaryInactive(@PathVariable String barberId) {
-        return barberService.cancelTemporaryInactive(barberId);
+    public Barber cancelTemporaryInactive(
+            @RequestParam String ownerId,
+            @PathVariable String barberId
+    ) {
+        return barberService.cancelTemporaryInactive(ownerId, barberId);
     }
 
     @PatchMapping("/{barberId}/vacation")
     public Barber addVacation(
+            @RequestParam String ownerId,
             @PathVariable String barberId,
             @RequestBody BarberVacationRequest request
     ) {
         return barberService.addVacation(
+                ownerId,
                 barberId,
                 request.getStartDate(),
                 request.getEndDate(),
@@ -86,7 +107,10 @@ public class BarberController {
     }
 
     @DeleteMapping("/{barberId}")
-    public String deleteBarber(@PathVariable String barberId) {
-        return barberService.deleteBarber(barberId);
+    public String deleteBarber(
+            @RequestParam String ownerId,
+            @PathVariable String barberId
+    ) {
+        return barberService.deleteBarber(ownerId, barberId);
     }
 }
