@@ -27,9 +27,10 @@ public class ServiceCrudController {
     public Service addService(
                               @PathVariable String serviceCategoryId,
                               @RequestParam String salonId,
+                              @RequestParam String ownerId,
                               @ModelAttribute Service service,
                               @RequestPart(value = "image",required = false)MultipartFile image){
-        return serviceCrudService.addService(salonId,serviceCategoryId,service,image);
+        return serviceCrudService.addService(ownerId,salonId,serviceCategoryId,service,image);
     }
 
     @GetMapping("/get-services-for-ai")
@@ -43,18 +44,20 @@ public class ServiceCrudController {
     @PatchMapping(value = "/update-service/{serviceId}", consumes = "multipart/form-data")
     public Service updateService(
             @PathVariable String serviceId,
+            @PathVariable String ownerId,
             @ModelAttribute com.project.render.DTO.ServiceUpdateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        return serviceCrudService.updateService(serviceId, request, image);
+        return serviceCrudService.updateService(ownerId, serviceId, request, image);
     }
 
     @DeleteMapping("/delete-service/{categoryId}/{serviceId}")
     public String deleteService(
             @PathVariable String categoryId,
-            @PathVariable String serviceId
+            @PathVariable String serviceId,
+            @PathVariable String ownerId
     ) {
-        serviceCrudService.deleteService(categoryId, serviceId);
+        serviceCrudService.deleteService(ownerId, categoryId, serviceId);
         return "Service Deleted";
     }
 

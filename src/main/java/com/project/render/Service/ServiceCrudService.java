@@ -32,7 +32,12 @@ public class ServiceCrudService {
     @Autowired
     private Cloudinary cloudinary;
 
-    public com.project.render.Entity.Service addService(String salonId, String categoryId, com.project.render.Entity.Service service, MultipartFile image){
+    @Autowired
+    private OwnerApplicationService ownerApplicationService;
+
+    public com.project.render.Entity.Service addService(String ownerId,String salonId, String categoryId, com.project.render.Entity.Service service, MultipartFile image){
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
 
         Salon salon = salonRepository.findById(salonId)
                 .orElseThrow(() -> new RuntimeException("Salon not found"));
@@ -94,10 +99,14 @@ public class ServiceCrudService {
     }
 
     public com.project.render.Entity.Service updateService(
+            String ownerId,
             String serviceId,
             ServiceUpdateRequest request,
             MultipartFile image
     ) {
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
+
         com.project.render.Entity.Service service = serviceCrudRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
@@ -122,7 +131,9 @@ public class ServiceCrudService {
         return serviceCrudRepository.save(service);
     }
 
-    public void deleteService(String categoryId, String serviceId) {
+    public void deleteService(String ownerId ,String categoryId, String serviceId) {
+
+        ownerApplicationService.validateOwnerAccess(ownerId);
 
         ServiceCategory category = serviceCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
