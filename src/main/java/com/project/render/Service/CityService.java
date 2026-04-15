@@ -2,8 +2,10 @@ package com.project.render.Service;
 
 import com.project.render.DTO.CityRequest;
 import com.project.render.Entity.City;
+import com.project.render.Entity.Salon;
 import com.project.render.Entity.User;
 import com.project.render.Repository.CityRepository;
+import com.project.render.Repository.SalonRepository;
 import com.project.render.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,9 @@ public class CityService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SalonRepository salonRepository;
 
     public City addCity(CityRequest request) {
         if (request.getAdminId() == null || request.getAdminId().trim().isEmpty()) {
@@ -107,19 +112,33 @@ public class CityService {
         City city = cityRepository.findById(cityId)
                 .orElseThrow(() -> new RuntimeException("City not found"));
 
-        String cityName = request.getName().trim().toLowerCase();
-        cityName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1);
+        String oldName = city.getName();   // ✅ STORE OLD NAME
 
-        // Prevent duplicate (except same city)
-        boolean exists = cityRepository.existsByNameIgnoreCase(cityName)
-                && !city.getName().equalsIgnoreCase(cityName);
+        String newName = request.getName().trim().toLowerCase();
+        newName = newName.substring(0, 1).toUpperCase() + newName.substring(1);
+
+        boolean exists = cityRepository.existsByNameIgnoreCase(newName)
+                && !city.getName().equalsIgnoreCase(newName);
 
         if (exists) {
             throw new RuntimeException("City already exists");
         }
 
-        city.setName(cityName);
-        return cityRepository.save(city);
+        // ✅ UPDATE CITY NAME
+        city.setName(newName);
+        cityRepository.save(city);
+
+        // 🔥 IMPORTANT: UPDATE ALL SALONS
+        List<Salon> salons = salonRepository.findAll();
+
+        for (Salon salon : salons) {
+            if (salon.getCity() != null && salon.getCity().equalsIgnoreCase(oldName)) {
+                salon.setCity(newName);
+                salonRepository.save(salon);
+            }
+        }
+
+        return city;
     }
 
     public void validateCity(String cityName) {
