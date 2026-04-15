@@ -81,5 +81,13 @@ public class BookingController {
     ) {
         return bookingService.ownerCancelBooking(bookingId, ownerId);
     }
+
+    @PostMapping("/{bookingId}/user-cancel")
+    public Booking userCancelBooking(
+            @PathVariable String bookingId,
+            @RequestParam String userId
+    ) {
+        return bookingService.userCancelBooking(bookingId, userId);
+    }
 }
 

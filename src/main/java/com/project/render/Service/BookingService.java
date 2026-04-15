@@ -519,4 +519,49 @@ public class BookingService {
     private String safe(String value) {
         return value != null ? value : "-";
     }
+
+    public Booking userCancelBooking(String bookingId, String userId) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getUserId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to cancel this booking");
+        }
+
+        if ("CANCELLED".equalsIgnoreCase(booking.getStatus())) {
+            throw new RuntimeException("Booking already cancelled");
+        }
+
+        // Optional: prevent cancelling completed bookings
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        if (
+                booking.getBookingDate().isBefore(today) ||
+                        (booking.getBookingDate().isEqual(today) && booking.getEndTime().isBefore(now))
+        ) {
+            throw new RuntimeException("Cannot cancel completed booking");
+        }
+
+        booking.setStatus("CANCELLED");
+        booking.setCancellationReason("Cancelled by user");
+        booking.setCancelledBy("USER");
+        booking.setCancelledAt(LocalDateTime.now());
+
+        Booking savedBooking = bookingRepository.save(booking);
+
+        // Optional notification
+        String bookingInfo = "for " + booking.getBookingDate() + " at " +
+                booking.getStartTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
+
+        notificationService.createBookingCancelledNotification(
+                booking.getUserId(),
+                booking.getId(),
+                "Cancelled by user",
+                bookingInfo
+        );
+
+        return savedBooking;
+    }
 }
