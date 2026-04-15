@@ -522,7 +522,8 @@ public class BookingService {
 
     public Booking userCancelBooking(String bookingId, String userId) {
 
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository
+                .findByIdAndUserId(bookingId, userId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         if (!booking.getUserId().equals(userId)) {
