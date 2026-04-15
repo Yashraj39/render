@@ -91,6 +91,37 @@ public class CityService {
         return "City deleted successfully";
     }
 
+    public City updateCity(String cityId, String adminId, CityRequest request) {
+
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new RuntimeException("City name is required");
+        }
+
+        User admin = userRepository.findByUserId(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        if (!"ADMIN".equalsIgnoreCase(admin.getRole())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        City city = cityRepository.findById(cityId)
+                .orElseThrow(() -> new RuntimeException("City not found"));
+
+        String cityName = request.getName().trim().toLowerCase();
+        cityName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1);
+
+        // Prevent duplicate (except same city)
+        boolean exists = cityRepository.existsByNameIgnoreCase(cityName)
+                && !city.getName().equalsIgnoreCase(cityName);
+
+        if (exists) {
+            throw new RuntimeException("City already exists");
+        }
+
+        city.setName(cityName);
+        return cityRepository.save(city);
+    }
+
     public void validateCity(String cityName) {
         if (cityName == null || cityName.trim().isEmpty()) {
             throw new RuntimeException("City is required");

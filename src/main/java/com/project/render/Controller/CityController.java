@@ -46,4 +46,13 @@ public class CityController {
     ) {
         return cityService.deleteCity(cityId, adminId);
     }
+
+    @PatchMapping("/admin/update/{cityId}")
+    public City updateCity(
+            @PathVariable String cityId,
+            @RequestParam String adminId,
+            @RequestBody CityRequest request
+    ) {
+        return cityService.updateCity(cityId, adminId, request);
+    }
 }
