@@ -541,26 +541,24 @@ public class BookingService {
             // =========================
             // SERVICE TABLE
             // =========================
-            PdfPTable table = new PdfPTable(4);
+            PdfPTable table = new PdfPTable(3);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{4.8f, 1.8f, 1.4f, 2f});
+            table.setWidths(new float[]{5.5f, 2f, 2.5f});
             table.setSpacingAfter(18f);
 
             addFancyHeaderCell(table, "Service", headerFont, tableHeader, border);
             addFancyHeaderCell(table, "Duration", headerFont, tableHeader, border);
-            addFancyHeaderCell(table, "Qty", headerFont, tableHeader, border);
             addFancyHeaderCell(table, "Amount", headerFont, tableHeader, border);
 
             if (booking.getServices() != null && !booking.getServices().isEmpty()) {
                 for (CartItem item : booking.getServices()) {
                     addFancyBodyCell(table, safe(item.getServiceName()), normalFont, border);
                     addFancyBodyCell(table, item.getTime() + " min", normalFont, border);
-                    addFancyBodyCell(table, "1", normalFont, border);
                     addFancyBodyCell(table, "₹ " + currencyFormat.format(item.getPrice()), normalFont, border);
                 }
             } else {
                 PdfPCell emptyCell = new PdfPCell(new Phrase("No services found", normalFont));
-                emptyCell.setColspan(4);
+                emptyCell.setColspan(3);
                 emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 emptyCell.setPadding(12f);
                 emptyCell.setBorderColor(border);
