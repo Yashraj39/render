@@ -48,6 +48,9 @@ public class Booking {
     private String cancellationReason;
     private String cancelledBy;
     private LocalDateTime cancelledAt;
+
+    private Boolean userDeleted = false;
+    private LocalDateTime userDeletedAt;
 }
 
 

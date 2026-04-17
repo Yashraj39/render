@@ -30,7 +30,6 @@ public class BookingController {
             @RequestParam String customerName,
             @RequestParam LocalDate date
     ) {
-
         return bookingService.getAvailableSlots(
                 userId, salonId, barberId, customerName, date
         );
@@ -40,7 +39,6 @@ public class BookingController {
     public Booking confirmBooking(
             @RequestBody ConfirmBookingRequest request
     ) {
-
         return bookingService.confirmBooking(request);
     }
 
@@ -89,5 +87,21 @@ public class BookingController {
     ) {
         return bookingService.userCancelBooking(bookingId, userId);
     }
-}
 
+    @DeleteMapping("/{bookingId}/user-delete")
+    public ResponseEntity<String> userDeleteBooking(
+            @PathVariable String bookingId,
+            @RequestParam String userId
+    ) {
+        bookingService.userDeleteBookingHistory(bookingId, userId);
+        return ResponseEntity.ok("Booking deleted from history");
+    }
+
+    @DeleteMapping("/user-delete-all")
+    public ResponseEntity<String> userDeleteAllBookingHistory(
+            @RequestParam String userId
+    ) {
+        int count = bookingService.userDeleteAllBookingHistory(userId);
+        return ResponseEntity.ok("Deleted " + count + " bookings from history");
+    }
+}

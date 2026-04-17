@@ -141,6 +141,7 @@ public class BookingService {
                 .totalTime(cart.getTotalTime())
                 .status("CONFIRMED")
                 .paymentStatus("UNPAID")
+                .userDeleted(false)
                 .build();
 
         bookingRepository.save(booking);
@@ -218,7 +219,7 @@ public class BookingService {
     }
 
     public List<UserBookingCardResponse> getUserBookings(String userId, String filter, String sort) {
-        List<Booking> bookings = bookingRepository.findByUserId(userId);
+        List<Booking> bookings = bookingRepository.findVisibleByUserId(userId);
 
         LocalDate today = LocalDate.now();
         LocalTime nowTime = LocalTime.now();
@@ -282,7 +283,7 @@ public class BookingService {
     }
 
     public BookingDetailsResponse getBookingDetails(String bookingId, String userId) {
-        Booking booking = bookingRepository.findByIdAndUserId(bookingId, userId)
+        Booking booking = bookingRepository.findVisibleByIdAndUserId(bookingId, userId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         Salon salon = salonRepository.findById(booking.getSalonId())
@@ -341,7 +342,7 @@ public class BookingService {
     }
 
     public byte[] generateBookingBillPdf(String bookingId, String userId) {
-        Booking booking = bookingRepository.findByIdAndUserId(bookingId, userId)
+        Booking booking = bookingRepository.findVisibleByIdAndUserId(bookingId, userId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         if (booking.getPaymentStatus() == null || !booking.getPaymentStatus().equalsIgnoreCase("PAID")) {
@@ -534,7 +535,6 @@ public class BookingService {
             throw new RuntimeException("Booking already cancelled");
         }
 
-        // Optional: prevent cancelling completed bookings
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
@@ -552,7 +552,6 @@ public class BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
 
-        // Optional notification
         String bookingInfo = "for " + booking.getBookingDate() + " at " +
                 booking.getStartTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
 
@@ -564,5 +563,63 @@ public class BookingService {
         );
 
         return savedBooking;
+    }
+
+    private boolean canDeleteFromHistory(Booking booking) {
+        if (booking == null) return false;
+
+        if ("CANCELLED".equalsIgnoreCase(booking.getStatus())) {
+            return true;
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        return booking.getBookingDate().isBefore(today) ||
+                (booking.getBookingDate().isEqual(today) && booking.getEndTime().isBefore(now));
+    }
+
+    public void userDeleteBookingHistory(String bookingId, String userId) {
+
+        Booking booking = bookingRepository
+                .findVisibleByIdAndUserId(bookingId, userId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getUserId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to delete this booking");
+        }
+
+        if (!canDeleteFromHistory(booking)) {
+            throw new RuntimeException("Only completed or cancelled booking history can be deleted");
+        }
+
+        booking.setUserDeleted(true);
+        booking.setUserDeletedAt(LocalDateTime.now());
+
+        bookingRepository.save(booking);
+    }
+
+    public int userDeleteAllBookingHistory(String userId) {
+
+        List<Booking> bookings = bookingRepository.findVisibleByUserId(userId);
+
+        List<Booking> deletable = bookings.stream()
+                .filter(this::canDeleteFromHistory)
+                .toList();
+
+        if (deletable.isEmpty()) {
+            return 0;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        deletable.forEach(booking -> {
+            booking.setUserDeleted(true);
+            booking.setUserDeletedAt(now);
+        });
+
+        bookingRepository.saveAll(deletable);
+
+        return deletable.size();
     }
 }

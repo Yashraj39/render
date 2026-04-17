@@ -4,6 +4,7 @@ import com.project.render.Entity.Booking;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -74,4 +75,11 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     Page<Booking> findBySalonIdAndBarberIdAndBookingDateAndStatus(
             String salonId, String barberId, LocalDate bookingDate, String status, Pageable pageable
     );
+
+    // Soft delete compatible methods for user booking history
+    @Query("{ 'userId': ?0, '$or': [ { 'userDeleted': false }, { 'userDeleted': { '$exists': false } } ] }")
+    List<Booking> findVisibleByUserId(String userId);
+
+    @Query("{ '_id': ?0, 'userId': ?1, '$or': [ { 'userDeleted': false }, { 'userDeleted': { '$exists': false } } ] }")
+    Optional<Booking> findVisibleByIdAndUserId(String id, String userId);
 }
