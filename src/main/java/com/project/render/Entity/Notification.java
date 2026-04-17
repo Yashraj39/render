@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Document(collection = "notifications")
@@ -20,6 +21,6 @@ public class Notification {
     private String message;
     private String type;
     private Boolean isRead;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private String audience;
 }

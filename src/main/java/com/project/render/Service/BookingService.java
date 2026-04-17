@@ -1,5 +1,6 @@
 package com.project.render.Service;
 
+import com.lowagie.text.*;
 import com.project.render.DTO.AvailableSlotResponse;
 import com.project.render.DTO.BookingDetailsResponse;
 import com.project.render.DTO.ConfirmBookingRequest;
@@ -18,14 +19,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.Element;
+import com.lowagie.text.Rectangle;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.text.NumberFormat;
+import java.util.Locale;
+import com.lowagie.text.Image;
+import java.io.InputStream;
 
 @Service
 public class BookingService {
@@ -358,145 +362,293 @@ public class BookingService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            Document document = new Document();
+            Document document = new Document(com.lowagie.text.PageSize.A4, 28, 28, 24, 28);
             PdfWriter.getInstance(document, out);
             document.open();
 
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22);
-            Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            Font sectionTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13);
-            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
-            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
-            Font smallGrayFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+            NumberFormat currencyFormat = NumberFormat.getNumberInstance(new Locale("en", "IN"));
 
-            Paragraph appName = new Paragraph("SlotMyStyle", titleFont);
+            java.awt.Color dark = new java.awt.Color(17, 24, 39);
+            java.awt.Color navy = new java.awt.Color(15, 23, 42);
+            java.awt.Color slate = new java.awt.Color(71, 85, 105);
+            java.awt.Color lightText = new java.awt.Color(100, 116, 139);
+            java.awt.Color border = new java.awt.Color(226, 232, 240);
+            java.awt.Color softBg = new java.awt.Color(248, 250, 252);
+            java.awt.Color tableHeader = new java.awt.Color(241, 245, 249);
+            java.awt.Color accent = new java.awt.Color(37, 99, 235);
+            java.awt.Color paidBg = new java.awt.Color(220, 252, 231);
+            java.awt.Color paidText = new java.awt.Color(22, 101, 52);
+            java.awt.Color grandBg = new java.awt.Color(239, 246, 255);
+
+            Font brandFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 26, java.awt.Color.WHITE);
+            Font whiteSmall = FontFactory.getFont(FontFactory.HELVETICA, 10, java.awt.Color.WHITE);
+            Font invoiceTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 17, dark);
+            Font sectionTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, dark);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10, dark);
+            Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, slate);
+            Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 9, lightText);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, dark);
+            Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, navy);
+            Font totalLabelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, slate);
+            Font paidFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, paidText);
+            Font invoiceMetaFont = FontFactory.getFont(FontFactory.HELVETICA, 10, dark);
+            Font whiteSection = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, java.awt.Color.WHITE);
+
+            Image logo = null;
+
+            try (InputStream is = getClass().getResourceAsStream("/static/logo.png")) {
+                if (is != null) {
+                    byte[] logoBytes = is.readAllBytes();
+                    logo = Image.getInstance(logoBytes);
+                    logo.scaleToFit(48, 48);
+                    logo.setAlignment(Image.ALIGN_LEFT);
+                }
+            } catch (Exception e) {
+                System.out.println("Logo not found or failed to load");
+            }
+
+            // =========================
+            // TOP PREMIUM HEADER
+            // =========================
+            PdfPTable hero = new PdfPTable(2);
+            hero.setWidthPercentage(100);
+            hero.setWidths(new float[]{2.7f, 1.4f});
+            hero.setSpacingAfter(18f);
+
+            PdfPCell brandCell = new PdfPCell();
+            brandCell.setBackgroundColor(navy);
+            brandCell.setPadding(22f);
+            brandCell.setBorder(Rectangle.NO_BORDER);
+
+            PdfPTable brandHeader = new PdfPTable(2);
+            brandHeader.setWidthPercentage(100);
+            brandHeader.setWidths(new float[]{0.9f, 4.1f});
+            brandHeader.setSpacingAfter(16f);
+
+            PdfPCell logoCell = new PdfPCell();
+            logoCell.setBorder(Rectangle.NO_BORDER);
+            logoCell.setBackgroundColor(navy);
+            logoCell.setVerticalAlignment(Element.ALIGN_TOP);
+            logoCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            logoCell.setPadding(0f);
+            logoCell.setPaddingTop(18f);
+            logoCell.setPaddingRight(10f);
+
+            if (logo != null) {
+                logoCell.addElement(logo);
+            }
+
+            PdfPCell brandTextCell = new PdfPCell();
+            brandTextCell.setBorder(Rectangle.NO_BORDER);
+            brandTextCell.setBackgroundColor(navy);
+            brandTextCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            brandTextCell.setPadding(0f);
+
+            Paragraph appName = new Paragraph("SlotMyStyle", brandFont);
             appName.setSpacingAfter(4f);
-            document.add(appName);
+            brandTextCell.addElement(appName);
 
-            Paragraph invoiceText = new Paragraph("Booking Bill / Invoice", subTitleFont);
-            invoiceText.setSpacingAfter(12f);
-            document.add(invoiceText);
+            Paragraph appTag = new Paragraph("Elevating Your Grooming Experience", whiteSmall);
+            appTag.setSpacingAfter(0f);
+            brandTextCell.addElement(appTag);
 
-            PdfPTable topTable = new PdfPTable(2);
-            topTable.setWidthPercentage(100);
-            topTable.setWidths(new float[]{3, 2});
-            topTable.setSpacingAfter(18f);
+            brandHeader.addCell(logoCell);
+            brandHeader.addCell(brandTextCell);
 
-            PdfPCell salonCell = new PdfPCell();
-            salonCell.setBorder(0);
-            salonCell.setPadding(8f);
-            salonCell.setBackgroundColor(new java.awt.Color(245, 245, 245));
-            salonCell.addElement(new Paragraph("Salon Details", sectionTitleFont));
-            salonCell.addElement(new Paragraph("Salon: " + safe(salon.getName()), normalFont));
-            salonCell.addElement(new Paragraph("City: " + safe(salon.getCity()), normalFont));
-            salonCell.addElement(new Paragraph("Address: " + safe(salon.getAddress()), normalFont));
-            salonCell.addElement(new Paragraph("Contact: " + safe(salon.getContact()), normalFont));
+            brandCell.addElement(brandHeader);
+
+            Paragraph salonName = new Paragraph(
+                    safe(salon.getName()),
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, java.awt.Color.WHITE)
+            );
+            salonName.setSpacingAfter(6f);
+            brandCell.addElement(salonName);
+
+            Paragraph address = new Paragraph(
+                    safe(salon.getAddress()) + ", " + safe(salon.getCity()),
+                    whiteSmall
+            );
+            address.setSpacingAfter(4f);
+            brandCell.addElement(address);
+
+            Paragraph contact = new Paragraph(
+                    "Contact: " + safe(salon.getContact()) + "   |   Email: " + safe(salon.getSalonEmail()),
+                    whiteSmall
+            );
+            brandCell.addElement(contact);
 
             PdfPCell invoiceCell = new PdfPCell();
-            invoiceCell.setBorder(0);
-            invoiceCell.setPadding(8f);
-            invoiceCell.setBackgroundColor(new java.awt.Color(245, 245, 245));
-            invoiceCell.addElement(new Paragraph("Invoice Info", sectionTitleFont));
-            invoiceCell.addElement(new Paragraph("Invoice No: " + booking.getId(), normalFont));
-            invoiceCell.addElement(new Paragraph(
-                    "Generated On: " + java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
+            invoiceCell.setBackgroundColor(new java.awt.Color(245, 247, 250));
+            invoiceCell.setPadding(18f);
+            invoiceCell.setBorder(Rectangle.NO_BORDER);
+
+            Paragraph invoiceHeading = new Paragraph("INVOICE", invoiceTitle);
+            invoiceHeading.setAlignment(Element.ALIGN_CENTER);
+            invoiceHeading.setSpacingAfter(14f);
+            invoiceCell.addElement(invoiceHeading);
+
+            invoiceCell.addElement(new Paragraph("Invoice No: " + booking.getId(), invoiceMetaFont));
+            invoiceCell.addElement(new Paragraph("Generated On: " + formatPdfDateTimeIst(), invoiceMetaFont));
+            invoiceCell.addElement(new Paragraph("Payment Status: Paid", invoiceMetaFont));
+            invoiceCell.addElement(new Paragraph("Booking Status: " + safe(booking.getStatus()), invoiceMetaFont));
+
+            hero.addCell(brandCell);
+            hero.addCell(invoiceCell);
+            document.add(hero);
+
+            // =========================
+            // BOOKING + SALON CARDS
+            // =========================
+            PdfPTable infoCards = new PdfPTable(2);
+            infoCards.setWidthPercentage(100);
+            infoCards.setWidths(new float[]{1, 1});
+            infoCards.setSpacingAfter(18f);
+
+            PdfPCell bookingCard = createCardCell("Booking Details", sectionTitle, border, softBg);
+            bookingCard.addElement(new Paragraph("Customer: " + safe(booking.getCustomerName()), normalFont));
+            bookingCard.addElement(new Paragraph("Barber: " + (barber != null ? safe(barber.getName()) : "-"), normalFont));
+            bookingCard.addElement(new Paragraph("Booking Date: " + formatPdfDate(booking.getBookingDate()), normalFont));
+            bookingCard.addElement(new Paragraph(
+                    "Time: " + formatPdfTime(booking.getStartTime()) + " to " + formatPdfTime(booking.getEndTime()),
                     normalFont
             ));
-            invoiceCell.addElement(new Paragraph("Payment Status: " + safe(booking.getPaymentStatus()), normalFont));
-            invoiceCell.addElement(new Paragraph("Booking Status: " + safe(booking.getStatus()), normalFont));
 
-            topTable.addCell(salonCell);
-            topTable.addCell(invoiceCell);
-            document.add(topTable);
+            PdfPCell salonCard = createCardCell("Salon Information", sectionTitle, border, softBg);
+            salonCard.addElement(new Paragraph("Salon: " + safe(salon.getName()), normalFont));
+            salonCard.addElement(new Paragraph("City: " + safe(salon.getCity()), normalFont));
+            salonCard.addElement(new Paragraph("Contact: " + safe(salon.getContact()), normalFont));
+            salonCard.addElement(new Paragraph("Email: " + safe(salon.getSalonEmail()), normalFont));
 
-            Paragraph bookingSection = new Paragraph("Booking Details", sectionTitleFont);
-            bookingSection.setSpacingAfter(8f);
-            document.add(bookingSection);
+            infoCards.addCell(bookingCard);
+            infoCards.addCell(salonCard);
+            document.add(infoCards);
 
-            PdfPTable detailTable = new PdfPTable(2);
-            detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[]{1, 1});
-            detailTable.setSpacingAfter(18f);
+            // =========================
+            // SERVICES TITLE STRIP
+            // =========================
+            PdfPTable strip = new PdfPTable(1);
+            strip.setWidthPercentage(100);
+            strip.setSpacingAfter(8f);
 
-            addDetailCell(detailTable, "Customer Name", safe(booking.getCustomerName()), boldFont, normalFont);
-            addDetailCell(detailTable, "Barber", barber != null ? safe(barber.getName()) : "-", boldFont, normalFont);
-            addDetailCell(detailTable, "Booking Date", String.valueOf(booking.getBookingDate()), boldFont, normalFont);
-            addDetailCell(detailTable, "Time",
-                    booking.getStartTime() + " - " + booking.getEndTime(), boldFont, normalFont);
+            PdfPCell stripCell = new PdfPCell(new Phrase("Services Summary", whiteSection));
+            stripCell.setBackgroundColor(accent);
+            stripCell.setPadding(10f);
+            stripCell.setBorder(Rectangle.NO_BORDER);
+            strip.addCell(stripCell);
 
-            document.add(detailTable);
+            document.add(strip);
 
-            Paragraph servicesSection = new Paragraph("Services", sectionTitleFont);
-            servicesSection.setSpacingAfter(8f);
-            document.add(servicesSection);
-
-            PdfPTable table = new PdfPTable(3);
+            // =========================
+            // SERVICE TABLE
+            // =========================
+            PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{5, 2, 2});
+            table.setWidths(new float[]{4.8f, 1.8f, 1.4f, 2f});
             table.setSpacingAfter(18f);
 
-            PdfPCell h1 = new PdfPCell(new Phrase("Service", boldFont));
-            PdfPCell h2 = new PdfPCell(new Phrase("Duration", boldFont));
-            PdfPCell h3 = new PdfPCell(new Phrase("Price", boldFont));
+            addFancyHeaderCell(table, "Service", headerFont, tableHeader, border);
+            addFancyHeaderCell(table, "Duration", headerFont, tableHeader, border);
+            addFancyHeaderCell(table, "Qty", headerFont, tableHeader, border);
+            addFancyHeaderCell(table, "Amount", headerFont, tableHeader, border);
 
-            java.awt.Color headerBg = new java.awt.Color(230, 230, 230);
-
-            h1.setBackgroundColor(headerBg);
-            h2.setBackgroundColor(headerBg);
-            h3.setBackgroundColor(headerBg);
-
-            h1.setPadding(8f);
-            h2.setPadding(8f);
-            h3.setPadding(8f);
-
-            table.addCell(h1);
-            table.addCell(h2);
-            table.addCell(h3);
-
-            if (booking.getServices() != null) {
+            if (booking.getServices() != null && !booking.getServices().isEmpty()) {
                 for (CartItem item : booking.getServices()) {
-                    PdfPCell s1 = new PdfPCell(new Phrase(safe(item.getServiceName()), normalFont));
-                    PdfPCell s2 = new PdfPCell(new Phrase(item.getTime() + " min", normalFont));
-                    PdfPCell s3 = new PdfPCell(new Phrase("Rs. " + item.getPrice(), normalFont));
-
-                    s1.setPadding(8f);
-                    s2.setPadding(8f);
-                    s3.setPadding(8f);
-
-                    table.addCell(s1);
-                    table.addCell(s2);
-                    table.addCell(s3);
+                    addFancyBodyCell(table, safe(item.getServiceName()), normalFont, border);
+                    addFancyBodyCell(table, item.getTime() + " min", normalFont, border);
+                    addFancyBodyCell(table, "1", normalFont, border);
+                    addFancyBodyCell(table, "₹ " + currencyFormat.format(item.getPrice()), normalFont, border);
                 }
+            } else {
+                PdfPCell emptyCell = new PdfPCell(new Phrase("No services found", normalFont));
+                emptyCell.setColspan(4);
+                emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                emptyCell.setPadding(12f);
+                emptyCell.setBorderColor(border);
+                table.addCell(emptyCell);
             }
 
             document.add(table);
 
-            PdfPTable totalTable = new PdfPTable(1);
-            totalTable.setWidthPercentage(38);
-            totalTable.setHorizontalAlignment(com.lowagie.text.Element.ALIGN_RIGHT);
+            // =========================
+            // PAYMENT + SUMMARY SECTION
+            // =========================
+            PdfPTable bottom = new PdfPTable(2);
+            bottom.setWidthPercentage(100);
+            bottom.setWidths(new float[]{1.7f, 1f});
+            bottom.setSpacingAfter(18f);
 
-            PdfPCell totalCell = new PdfPCell();
-            totalCell.setPadding(10f);
-            totalCell.setBackgroundColor(new java.awt.Color(248, 248, 248));
+            PdfPCell paymentBox = createCardCell("Payment Information", sectionTitle, border, java.awt.Color.WHITE);
+            paymentBox.addElement(new Paragraph("Payment Status", labelFont));
+            paymentBox.addElement(new Paragraph(" ", normalFont));
 
-            totalCell.addElement(new Paragraph("Summary", sectionTitleFont));
-            totalCell.addElement(new Paragraph("Total Services: " +
-                    (booking.getServices() != null ? booking.getServices().size() : 0), normalFont));
-            totalCell.addElement(new Paragraph("Total Time: " + booking.getTotalTime() + " min", normalFont));
-            totalCell.addElement(new Paragraph("Total Amount: Rs. " + booking.getTotalPrice(), boldFont));
+            PdfPTable paidBadgeWrap = new PdfPTable(1);
+            paidBadgeWrap.setWidthPercentage(38);
 
-            totalTable.addCell(totalCell);
-            document.add(totalTable);
+            PdfPCell paidBadge = new PdfPCell(new Phrase("PAID", paidFont));
+            paidBadge.setHorizontalAlignment(Element.ALIGN_CENTER);
+            paidBadge.setPadding(8f);
+            paidBadge.setBackgroundColor(paidBg);
+            paidBadge.setBorderColor(new java.awt.Color(187, 247, 208));
+            paidBadgeWrap.addCell(paidBadge);
 
-            Paragraph footerSpace = new Paragraph(" ");
-            footerSpace.setSpacingBefore(12f);
-            document.add(footerSpace);
+            paymentBox.addElement(paidBadgeWrap);
+            paymentBox.addElement(new Paragraph(" ", normalFont));
+            paymentBox.addElement(new Paragraph("Booking ID: " + booking.getId(), normalFont));
 
-            Paragraph footer = new Paragraph(
-                    "Thank you for booking with SlotMyStyle.",
-                    smallGrayFont
+            PdfPCell summaryBox = new PdfPCell();
+            summaryBox.setPadding(16f);
+            summaryBox.setBorderColor(border);
+            summaryBox.setBackgroundColor(grandBg);
+
+            Paragraph summaryTitle = new Paragraph("Invoice Summary", sectionTitle);
+            summaryTitle.setSpacingAfter(12f);
+            summaryBox.addElement(summaryTitle);
+
+            summaryBox.addElement(new Paragraph(
+                    "Total Services: " + (booking.getServices() != null ? booking.getServices().size() : 0),
+                    totalLabelFont
+            ));
+            summaryBox.addElement(new Paragraph(
+                    "Total Duration: " + booking.getTotalTime() + " min",
+                    totalLabelFont
+            ));
+            summaryBox.addElement(new Paragraph(" ", normalFont));
+
+            Paragraph grandTotal = new Paragraph(
+                    "Grand Total: ₹ " + currencyFormat.format(booking.getTotalPrice()),
+                    totalFont
             );
-            footer.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+            grandTotal.setSpacingBefore(4f);
+            summaryBox.addElement(grandTotal);
+
+            bottom.addCell(paymentBox);
+            bottom.addCell(summaryBox);
+            document.add(bottom);
+
+            // =========================
+            // FOOTER
+            // =========================
+            PdfPTable footer = new PdfPTable(1);
+            footer.setWidthPercentage(100);
+
+            PdfPCell footerCell = new PdfPCell();
+            footerCell.setPadding(14f);
+            footerCell.setBorderColor(border);
+            footerCell.setBackgroundColor(softBg);
+
+            Paragraph thanks = new Paragraph("Thank you for booking with SlotMyStyle.", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, slate));
+            thanks.setAlignment(Element.ALIGN_CENTER);
+            thanks.setSpacingAfter(6f);
+            footerCell.addElement(thanks);
+
+            Paragraph note = new Paragraph(
+                    "This is a system-generated invoice for your salon booking.",
+                    smallFont
+            );
+            note.setAlignment(Element.ALIGN_CENTER);
+            footerCell.addElement(note);
+
+            footer.addCell(footerCell);
             document.add(footer);
 
             document.close();
@@ -622,4 +774,64 @@ public class BookingService {
 
         return deletable.size();
     }
+
+    private PdfPCell createCardCell(String title, Font titleFont, java.awt.Color borderColor, java.awt.Color bgColor) {
+        PdfPCell cell = new PdfPCell();
+        cell.setPadding(16f);
+        cell.setBorderColor(borderColor);
+        cell.setBackgroundColor(bgColor);
+
+        Paragraph heading = new Paragraph(title, titleFont);
+        heading.setSpacingAfter(10f);
+        cell.addElement(heading);
+
+        return cell;
+    }
+
+    private void addFancyHeaderCell(
+            PdfPTable table,
+            String text,
+            Font font,
+            java.awt.Color bg,
+            java.awt.Color borderColor
+    ) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(10f);
+        cell.setBackgroundColor(bg);
+        cell.setBorderColor(borderColor);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private void addFancyBodyCell(
+            PdfPTable table,
+            String text,
+            Font font,
+            java.awt.Color borderColor
+    ) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(10f);
+        cell.setBorderColor(borderColor);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private String formatPdfDate(LocalDate date) {
+        if (date == null) return "-";
+        return date.format(DateTimeFormatter.ofPattern("dd MMM yyyy"));
+    }
+
+    private String formatPdfTime(LocalTime time) {
+        if (time == null) return "-";
+        return time.format(DateTimeFormatter.ofPattern("h:mm a")).toLowerCase();
+    }
+
+    private String formatPdfDateTimeIst() {
+        return ZonedDateTime.now(ZoneId.of("Asia/Kolkata"))
+                .format(DateTimeFormatter.ofPattern("dd MMM yyyy, h:mm a"))
+                .toLowerCase();
+    }
+
 }

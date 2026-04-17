@@ -5,6 +5,7 @@ import com.project.render.Repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class NotificationService {
                 .type("BOOKING_CANCELLED")
                 .audience("USER")
                 .isRead(false)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build();
 
         notificationRepository.save(notification);
@@ -37,7 +38,7 @@ public class NotificationService {
                 .type(type)
                 .audience(audience)
                 .isRead(false)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build();
 
         notificationRepository.save(notification);
